@@ -9,16 +9,34 @@ public class CarControl implements CarControlI {
     Car[]  car;               // Cars
     Gate[] gate;              // Gates
 
+    static final int MAP_WIDTH = 12, MAP_HEIGHT = 11;
+
+    Semaphore[][] semap;        // Map of the semap?
+
     public CarControl(CarDisplayI cd) {
         this.cd = cd;
         this.car  = new  Car[9];
         this.gate = new Gate[9];
+        this.semap = new Semaphore[MAP_WIDTH][MAP_HEIGHT];
+
+
+        for(int x = 0; x < this.MAP_WIDTH; x++) {
+            for(int y = 0; y < this.MAP_HEIGHT; y++) {
+                // Mark all spots on the semap as free to use
+                this.semap[x][y] = new Semaphore(1);
+            }
+        }
 
         for (int no = 0; no < 9; no++) {
             this.gate[no] = new Gate();
-            this.car[no] = new Car(no,cd,gate[no]);
+            this.car[no] = new Car(no,cd,gate[no], this.semap);
             this.car[no].start();
+
+            // Used to occupy the spot where the car is spawned
+            Pos startPos = this.car[no].startpos;
+            this.semap[startPos.col][startPos.row] = new Semaphore(0);
         }
+
     }
 
    public void startCar(int no) {

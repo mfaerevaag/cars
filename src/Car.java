@@ -12,17 +12,19 @@ public class Car extends Thread {
     Pos barpos;                      // Barrierpositon (provided by GUI)
     Color col;                       // Car  color
     Gate mygate;                     // Gate at startposition
+    Semaphore[][] semap; // The entire map as semaphores
 
 
     int speed;                       // Current car speed
     Pos curpos;                      // Current position
     Pos newpos;                      // New position to go to
 
-    public Car(int no, CarDisplayI cd, Gate g) {
+    public Car(int no, CarDisplayI cd, Gate g, Semaphore[][] semap) {
         this.no = no;
         this.cd = cd;
 
         this.mygate = g;
+        this.semap = semap;
         this.startpos = cd.getStartPos(no);
         this.barpos = cd.getBarrierPos(no);  // For later use
 
@@ -65,6 +67,10 @@ public class Car extends Thread {
         return speed * (cd.isSlow(this.curpos) ? slowfactor : 1);
     }
 
+    private Semaphore getSemaphoreFromPos(Pos pos) {
+        return this.semap[pos.col][pos.row];
+    }
+
     Color chooseColor() {
         // You can get any color, as longs as it's blue
         return Color.blue;
@@ -96,12 +102,18 @@ public class Car extends Thread {
 
                 newpos = nextPos(curpos);
 
+                // TODO: check if newpos is free.
+                this.getSemaphoreFromPos(newpos).P();
+
                 //  Move to new position
                 cd.clear(curpos);
                 cd.mark(curpos,newpos,col,no);
                 sleep(speed());
+
                 cd.clear(curpos,newpos);
                 cd.mark(newpos,col,no);
+
+                this.getSemaphoreFromPos(curpos).V();
 
                 curpos = newpos;
             }
