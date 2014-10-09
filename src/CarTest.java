@@ -16,7 +16,7 @@ public class CarTest extends Thread {
 
     public void run() {
         try {
-            switch (testno) { 
+            switch (testno) {
             case 0:
                 // Demonstration of startAll/stopAll.
                 // Should let the cars go one round (unless very fast)
@@ -46,6 +46,3 @@ public class CarTest extends Thread {
     }
 
 }
-
-
-

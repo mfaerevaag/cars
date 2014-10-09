@@ -10,13 +10,13 @@ public class Semaphore {
     private int s = 0;
 
     public Semaphore(int s0) {
-        if (s0 >= 0) 
+        if (s0 >= 0)
             s = s0;
-        else 
+        else
             throw new Error("Semaphore initialized to negative value: " + s0);
     }
 
-    public synchronized void P() 
+    public synchronized void P()
     throws InterruptedException {
         while (s == 0) wait();
         s--;
@@ -32,4 +32,3 @@ public class Semaphore {
     }
 
 }
-

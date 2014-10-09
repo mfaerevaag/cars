@@ -21,10 +21,10 @@ import java.lang.reflect.InvocationTargetException;
 import javax.swing.*;
 
 @SuppressWarnings("serial")
-class CarField extends JPanel { 
+class CarField extends JPanel {
 
     final static int   edge = 30;       // Field size
-    
+
     // Colors
     final static Color defcolor      = Color.blue;
     final static Color symbolcolor   = new Color(200,200,200);
@@ -37,32 +37,32 @@ class CarField extends JPanel {
     final static Color closedcolor   = Color.red;
     final static Color barriercolor  = Color.black;
     final static Color barriercolor2 = new Color(255,70,70);    // Emphasis colour - a kind of orange
-    
+
     final static Font f = new Font("SansSerif",Font.BOLD,12);
 
     final static int maxstaints = 10;
-    
+
     static Color currentBridgeColor = bridgecolor;
 
     private Cars cars;
 
     // Model of field status
     // Modified through event-thread (except for Car no. 0)
-    
+
     private int users = 0;             // No. of current users of field
-    private Color c = defcolor;        
-    private char id = ' ';    
+    private Color c = defcolor;
+    private char id = ' ';
     private char symbol = ' ';
     private int xoffset = 0;           // -1,0,1 Horizontal offset
     private int yoffset = 0;           // -1,0,1 Vertical offset
 
-    private boolean isblocked = false; // Field can be used 
-    private boolean hadcrash  = false; // Car crash has occurred 
+    private boolean isblocked = false; // Field can be used
+    private boolean hadcrash  = false; // Car crash has occurred
     private boolean keepcrash = false; // For detecting crashes
     private boolean slowdown  = false; // Slow field
     private boolean onbridge  = false; // Bridge field
 
-    private boolean isstartpos = false;    
+    private boolean isstartpos = false;
     private int     startposno = 0;
     private boolean startposopen = false;
 
@@ -82,22 +82,22 @@ class CarField extends JPanel {
     public CarField(Pos p, Cars c) {
         cars = c;
         setPreferredSize(new Dimension(edge,edge));
-         setBackground(bgcolor);
+        setBackground(bgcolor);
         setOpaque(true);
 
         addMouseListener(new MouseAdapter () {
-            public void mousePressed(MouseEvent e) {
-                if (isstartpos) {
-                    if ((e.getModifiers() & InputEvent.SHIFT_MASK) > 0)  
-                        cars.removeCar(startposno);
-                    else
-                        if ((e.getModifiers() & InputEvent.CTRL_MASK) > 0) 
-                            cars.restoreCar(startposno);
+                public void mousePressed(MouseEvent e) {
+                    if (isstartpos) {
+                        if ((e.getModifiers() & InputEvent.SHIFT_MASK) > 0)
+                            cars.removeCar(startposno);
                         else
-                            cars.startFieldClick(startposno);
+                            if ((e.getModifiers() & InputEvent.CTRL_MASK) > 0)
+                                cars.restoreCar(startposno);
+                            else
+                                cars.startFieldClick(startposno);
+                    }
                 }
-            }
-        });
+            });
     }
 
     public void enter(int xoff, int yoff, Color newc, char ch) {
@@ -114,7 +114,7 @@ class CarField extends JPanel {
         id = ch;
         xoffset = xoff;
         yoffset = yoff;
-        repaint();  
+        repaint();
     }
 
     public void exit() {
@@ -176,11 +176,11 @@ class CarField extends JPanel {
     }
 
     public void setBridge(boolean onbridge) {
-        this.onbridge = onbridge; 
+        this.onbridge = onbridge;
         setBackground(onbridge? currentBridgeColor : bgcolor);
         repaint();
     }
-    
+
     public static void setOverload(boolean overloaded) {
         currentBridgeColor = (overloaded ? overloadcolor : bridgecolor);
     }
@@ -201,17 +201,17 @@ class CarField extends JPanel {
         }
 
         if (hadcrash) {
-            g.setColor(Color.red); 
+            g.setColor(Color.red);
             g.fillOval(staintx,stainty,staintd,staintd);
         }
 
         if (users > 1 || (users > 0 && isblocked)) {
-            g.setColor(Color.red); 
+            g.setColor(Color.red);
             g.fillRect(0,0,edge,edge);
         }
 
         if (users < 0) {
-            g.setColor(Color.yellow); 
+            g.setColor(Color.yellow);
             g.fillRect(0,0,edge,edge);
         }
 
@@ -221,10 +221,10 @@ class CarField extends JPanel {
             int deltay = yoffset*(edge/2);
             g.fillOval(3+deltax,3+deltay,edge-7,edge-7);
             if (id != ' ') {
-                if (light(c)) 
-                    g.setColor(Color.black); 
-                else 
-                    g.setColor(Color.white); 
+                if (light(c))
+                    g.setColor(Color.black);
+                else
+                    g.setColor(Color.white);
                 g.setFont(f);
                 FontMetrics fm = getFontMetrics(f);
                 int w = fm.charWidth(id);
@@ -241,7 +241,7 @@ class CarField extends JPanel {
 
         if (barrieractive) {
             if (!barrieremph) g.setColor(barriercolor); else g.setColor(barriercolor2);
-            if (barriertop) 
+            if (barriertop)
                 g.fillRect(0,0,edge,2);
             else
                 g.fillRect(0,edge-2,edge,2);
@@ -267,13 +267,13 @@ class Ground extends JPanel {
     private boolean checkBridge = false;
     private int limit = Cars.initialBridgeLimit;
 
- 
+
     public Ground(Cars  c) {
         cars = c;
         area = new CarField [n] [m];
         setLayout(new GridLayout(n,m));
         setBorder(BorderFactory.createLineBorder(new Color(180,180,180)));
-        
+
         for (int i = 0; i < n ; i++)
             for (int j = 0; j < m; j++) {
                 area [i][j] = new CarField(new Pos(i,j),cars);
@@ -282,14 +282,14 @@ class Ground extends JPanel {
 
         // Define Hut area
         for (int i = 2; i <= 7; i++)
-            for (int j = 1; j <= 3; j++) 
+            for (int j = 1; j <= 3; j++)
                 if (i < 4 || i > 5 || j < 2)
                     area[i][j].setBlocked();
 
 
         // Define Shed area
         for (int i = 10; i <= 10; i++)
-            for (int j = 0; j < 2; j++) 
+            for (int j = 0; j < 2; j++)
                 area[i][j].setBlocked();
 
         // Set start/gate positions
@@ -302,7 +302,7 @@ class Ground extends JPanel {
         for (int i = 0; i < 9; i++) {
             area[4][i+3].setBarrierPos(false);
             area[5][i+3].setBarrierPos(true);
-         }
+        }
 
     }
 
@@ -311,11 +311,11 @@ class Ground extends JPanel {
         return pos.col >= 1 && pos.col <= 3 && pos.row >= 9 && pos.row <= 11;
     }
 
-    
-   // The following methods are normally called through the event-thread.
-   // May also be called directly by Car no. 0, but then for private fields.
-   // Hence no synchronization is necessary
-    
+
+    // The following methods are normally called through the event-thread.
+    // May also be called directly by Car no. 0, but then for private fields.
+    // Hence no synchronization is necessary
+
     public void mark(Pos p, Color c, int no) {
         CarField f = area[p.row][p.col];
         f.enter(0,0,c,(char) (no + (int) '0'));
@@ -333,7 +333,7 @@ class Ground extends JPanel {
         if (isOnBridge(p) || isOnBridge(q)) onbridge++;
         bridgeCheck();
         // repaint();
-   }
+    }
 
     public void clear(Pos p) {
         CarField f = area[p.row][p.col];
@@ -352,7 +352,7 @@ class Ground extends JPanel {
     }
 
     // The following internal graphical methods are only called via the event-thread
-        
+
     void setOpen(int no) {
         Pos p = cars.getStartPos(no);
         area[p.row][p.col].setStartPos(true);
@@ -372,7 +372,7 @@ class Ground extends JPanel {
             area[p.row + (no < 5 ? 1 : -1)][p.col].showBarrier(active);
         }
         // repaint();
-    }    
+    }
 
     void setBarrierEmphasis(boolean emph) {
         for (int no = 0; no < 9; no++) {
@@ -381,42 +381,42 @@ class Ground extends JPanel {
             area[p.row + (no < 5 ? 1 : -1)][p.col].emphasizeBarrier(emph);
         }
         // repaint();
-    }    
+    }
 
     void setKeep(boolean keep) {
         for (int i = 0; i < n; i++)
-            for (int j = 0; j < m; j++) 
+            for (int j = 0; j < m; j++)
                 area[i][j].setKeep(keep);
     }
 
     void setSlow(boolean slowdown) {
-        for (int i = 0; i < n; i++) 
+        for (int i = 0; i < n; i++)
             area[i][0].setSlow(slowdown);
         // repaint();
     }
-    
+
     void showBridge(boolean active) {
-        for (int i = 9; i < 11; i++) 
-            for (int j = 1; j < 4; j++) 
+        for (int i = 9; i < 11; i++)
+            for (int j = 1; j < 4; j++)
                 area[i][j].setBridge(active);
         checkBridge = active;
         bridgeCheck();
     }
-    
+
     void setLimit(int max) {
         limit = max;
         bridgeCheck();
-     }
-    
+    }
+
     void bridgeCheck() {
-        if (checkBridge) { 
+        if (checkBridge) {
             CarField.setOverload(onbridge > limit);
-            for (int i = 9; i < 11; i++) 
-                for (int j = 1; j < 4; j++) 
+            for (int i = 9; i < 11; i++)
+                for (int j = 1; j < 4; j++)
                     area[i][j].repaint();
         }
     }
-    
+
 }
 
 @SuppressWarnings("serial")
@@ -434,7 +434,7 @@ class ControlPanel extends JPanel {
     JPanel barrier_panel = new JPanel();
 
     // JCheckBox barrier_on = new JCheckBox("Active", false);
- 
+
     JButton barrier_on       = new JButton("On");
     JButton barrier_off      = new JButton("Off");
     // JButton barrier_shutdown = new JButton("Shut down");
@@ -442,7 +442,7 @@ class ControlPanel extends JPanel {
     JPanel bridge_panel = new JPanel();   // Combined with barrier panel
 
     JCheckBox bridge_on = new JCheckBox("Show", false);
- 
+
     JLabel     threshold_label = new JLabel("Threshold:");
     JComboBox<String> barrier_threshold = new JComboBox<String>();
     int currentThreshold = 9;
@@ -459,36 +459,36 @@ class ControlPanel extends JPanel {
         cars = c;
 
         Insets bmargin = new Insets(2,5,2,5);
-        
+
         setLayout( new GridLayout(3,1) );
-        
+
         JButton start_all = new JButton("Start all");
         start_all.setMargin(bmargin);
         start_all.addActionListener( new ActionListener () {
-            public void actionPerformed(ActionEvent e) {
-                cars.startAll();
-            }
-        });
+                public void actionPerformed(ActionEvent e) {
+                    cars.startAll();
+                }
+            });
 
         JButton stop_all = new JButton("Stop all");
         stop_all.setMargin(bmargin);
         stop_all.addActionListener( new ActionListener () {
-            public void actionPerformed(ActionEvent e) {
-                cars.stopAll();
-            }
-        });
+                public void actionPerformed(ActionEvent e) {
+                    cars.stopAll();
+                }
+            });
 
         keep.addItemListener( new ItemListener () {
-            public void itemStateChanged(ItemEvent e) {
-                cars.setKeep(keep.isSelected());
-            }
-        });
+                public void itemStateChanged(ItemEvent e) {
+                    cars.setKeep(keep.isSelected());
+                }
+            });
 
         slow.addItemListener( new ItemListener () {
-            public void itemStateChanged(ItemEvent e) {
-                cars.setSlow(slow.isSelected());
-            }
-        });
+                public void itemStateChanged(ItemEvent e) {
+                    cars.setSlow(slow.isSelected());
+                }
+            });
 
         button_panel.add(start_all);
         button_panel.add(stop_all);
@@ -500,111 +500,111 @@ class ControlPanel extends JPanel {
         add(button_panel);
 
         barrier_panel.add(new JLabel("Barrier:"));
-        
+
         barrier_on.setMargin(bmargin);
         barrier_off.setMargin(bmargin);
         // barrier_shutdown.setMargin(bmargin);
- 
+
         barrier_on.addActionListener( new ActionListener () {
-            public void actionPerformed(ActionEvent e) {
-                cars.barrierOn();
-            }
-        });
+                public void actionPerformed(ActionEvent e) {
+                    cars.barrierOn();
+                }
+            });
 
         barrier_off.addActionListener( new ActionListener () {
-            public void actionPerformed(ActionEvent e) {
-                cars.barrierOff();
-            }
-        });
+                public void actionPerformed(ActionEvent e) {
+                    cars.barrierOff();
+                }
+            });
 
 /*
-        barrier_shutdown.addActionListener( new ActionListener () {
-            public void actionPerformed(ActionEvent e) {
-                cars.barrierShutDown(null);
-            }
-        });
+  barrier_shutdown.addActionListener( new ActionListener () {
+  public void actionPerformed(ActionEvent e) {
+  cars.barrierShutDown(null);
+  }
+  });
 */
 
         barrier_panel.add(barrier_on);
         barrier_panel.add(barrier_off);
         //barrier_panel.add(barrier_shutdown);
-        
+
 /*
-        barrier_panel.add(barrier_on);
-        
-        barrier_on.addItemListener( new ItemListener () {
-            public void itemStateChanged(ItemEvent e) {
-                cars.barrierClicked(barrier_on.isSelected());
-            }
-        });
- */
- 
+  barrier_panel.add(barrier_on);
+
+  barrier_on.addItemListener( new ItemListener () {
+  public void itemStateChanged(ItemEvent e) {
+  cars.barrierClicked(barrier_on.isSelected());
+  }
+  });
+*/
+
         barrier_panel.add(new JLabel("   "));
 
 
-        for (int i = 0; i <= 7; i++) 
+        for (int i = 0; i <= 7; i++)
             barrier_threshold.addItem(""+(i+2));
         barrier_threshold.setSelectedIndex(currentThreshold - 2);
 
         barrier_threshold.addActionListener( new ActionListener () {
-            public void actionPerformed(ActionEvent e) {
-                int t = barrier_threshold.getSelectedIndex() + 2; 
-                // Ignore internal changes
-                if (t != currentThreshold) {
-                	cars.barrierSet(t, null);
+                public void actionPerformed(ActionEvent e) {
+                    int t = barrier_threshold.getSelectedIndex() + 2;
+                    // Ignore internal changes
+                    if (t != currentThreshold) {
+                        cars.barrierSet(t, null);
+                    }
                 }
-            }
-        });
+            });
 
         barrier_panel.add(threshold_label);
         barrier_panel.add(barrier_threshold);
 
-        
+
 /*
-        barrier_panel.add(new JLabel("Bridge:"));
-        barrier_panel.add(bridge_on);
- 
-        bridge_on.addItemListener( new ItemListener () {
-            public void itemStateChanged(ItemEvent e) {
-                cars.showBridge(bridge_on.isSelected());
-            }
-        });
+  barrier_panel.add(new JLabel("Bridge:"));
+  barrier_panel.add(bridge_on);
+
+  bridge_on.addItemListener( new ItemListener () {
+  public void itemStateChanged(ItemEvent e) {
+  cars.showBridge(bridge_on.isSelected());
+  }
+  });
 
 
 
-       for (int i = 0; i < 6; i++) 
-            bridge_limit.addItem(""+(i+1));
-        bridge_limit.setSelectedIndex(currentLimit-1);
+  for (int i = 0; i < 6; i++)
+  bridge_limit.addItem(""+(i+1));
+  bridge_limit.setSelectedIndex(currentLimit-1);
 
-        bridge_limit.addActionListener( new ActionListener () {
-            public void actionPerformed(ActionEvent e) {
-                int i = bridge_limit.getSelectedIndex();
-                System.out.println("Select event " + i);
-                // Ignore internal changes
-                if (i+1 != currentLimit) {
-                    System.out.println("Calling setLimit");
-                    cars.setLimit(i+1);
-                }
-            }
-        });
-        
-        barrier_panel.add(bridge_limit);
-*/        
-       
+  bridge_limit.addActionListener( new ActionListener () {
+  public void actionPerformed(ActionEvent e) {
+  int i = bridge_limit.getSelectedIndex();
+  System.out.println("Select event " + i);
+  // Ignore internal changes
+  if (i+1 != currentLimit) {
+  System.out.println("Calling setLimit");
+  cars.setLimit(i+1);
+  }
+  }
+  });
+
+  barrier_panel.add(bridge_limit);
+*/
+
         add(barrier_panel);
 
-                 
-        for (int i = 0; i < test_count; i++) 
+
+        for (int i = 0; i < test_count; i++)
             test_choice.addItem(""+i);
 
         JButton run_test = new JButton("Run test no.");
         run_test.setMargin(bmargin);
         run_test.addActionListener( new ActionListener () {
-            public void actionPerformed(ActionEvent e) {
-                int i = test_choice.getSelectedIndex();
-                cars.runTest(i);
-            }
-        });
+                public void actionPerformed(ActionEvent e) {
+                    int i = test_choice.getSelectedIndex();
+                    cars.runTest(i);
+                }
+            });
 
         test_panel.add(run_test);
         test_panel.add(test_choice);
@@ -613,57 +613,57 @@ class ControlPanel extends JPanel {
     }
 
     public void barrierSetBegin() {
-    	// barrier_on.setEnabled(false);
-       	// barrier_off.setEnabled(false);
-       	barrier_threshold.setEnabled(false);
+        // barrier_on.setEnabled(false);
+        // barrier_off.setEnabled(false);
+        barrier_threshold.setEnabled(false);
     }
-    
+
     public void barrierSetEnd(int k) {
-    	// barrier_on.setEnabled(true);
-    	// barrier_off.setEnabled(true);
+        // barrier_on.setEnabled(true);
+        // barrier_off.setEnabled(true);
         if (k !=currentThreshold ) {
-        	currentThreshold = k;
-        	barrier_threshold.setSelectedIndex(k - 2);
+            currentThreshold = k;
+            barrier_threshold.setSelectedIndex(k - 2);
         }
-    	barrier_threshold.setEnabled(true);
+        barrier_threshold.setEnabled(true);
     }
-    
+
 /*
-        public void shutDownBegin() {
-    	barrier_on.setEnabled(false);
-       	barrier_off.setEnabled(false);
-       	barrier_shutdown.setEnabled(false);
-          }
-    
-    public void shutDownEnd() {
-    	barrier_on.setEnabled(true);
-    	barrier_off.setEnabled(true);
-    	barrier_shutdown.setEnabled(true);
-    }
-    
-   public void disableBridge() {
-        limit_label.setEnabled(false);
-        bridge_limit.setEnabled(false);
-   }
-    
-   public void disableLimit() {
-       // bridge_limit.setEnabled(false);
-   }
+  public void shutDownBegin() {
+  barrier_on.setEnabled(false);
+  barrier_off.setEnabled(false);
+  barrier_shutdown.setEnabled(false);
+  }
 
-    public void enableLimit(int k) {
-        currentLimit = k;
-        if (k - 1 != bridge_limit.getSelectedIndex()) bridge_limit.setSelectedIndex(k - 1 );
-        // bridge_limit.setEnabled(true);
-    }
+  public void shutDownEnd() {
+  barrier_on.setEnabled(true);
+  barrier_off.setEnabled(true);
+  barrier_shutdown.setEnabled(true);
+  }
 
-    public void setBridge(boolean active) {
-    	// Precaution to avoid infinite event seqeunce of events
-    	if (active != bridge_on.isSelected()) {
-    		bridge_on.setSelected(active);
-    	}
-     }
+  public void disableBridge() {
+  limit_label.setEnabled(false);
+  bridge_limit.setEnabled(false);
+  }
+
+  public void disableLimit() {
+  // bridge_limit.setEnabled(false);
+  }
+
+  public void enableLimit(int k) {
+  currentLimit = k;
+  if (k - 1 != bridge_limit.getSelectedIndex()) bridge_limit.setSelectedIndex(k - 1 );
+  // bridge_limit.setEnabled(true);
+  }
+
+  public void setBridge(boolean active) {
+  // Precaution to avoid infinite event seqeunce of events
+  if (active != bridge_on.isSelected()) {
+  bridge_on.setSelected(active);
+  }
+  }
 */
-    
+
 
 }
 
@@ -671,11 +671,11 @@ class ControlPanel extends JPanel {
 @SuppressWarnings({ "serial" })
 public class Cars extends JFrame implements CarDisplayI {
 
-	static final int width      =   30;       // Width of text area
+    static final int width      =   30;       // Width of text area
     static final int minhistory =   50;       // Min no. of lines kept
 
     public static final int initialBridgeLimit = 4;
-    
+
     // Model
     private boolean[] gateopen = new boolean[9];
     private Pos[] startpos     = new Pos[9];
@@ -710,7 +710,7 @@ public class Cars extends JFrame implements CarDisplayI {
                     txt.replaceRange("",0,cutpos);
                 } catch (Exception e) {}
             }
-           txt.append(m+"\n");
+            txt.append(m+"\n");
         }
     }
 
@@ -718,7 +718,7 @@ public class Cars extends JFrame implements CarDisplayI {
      * Thread to carry out barrier threshold setting since
      * it may be blocked by CarControl
      */
-      
+
     class SetThread extends Thread {
         int newval;
 
@@ -727,148 +727,148 @@ public class Cars extends JFrame implements CarDisplayI {
         }
 
         public void run() {
-        	try {
-        		ctr.barrierSet(newval);
+            try {
+                ctr.barrierSet(newval);
 
-        		// System.out.println("Barrier set returned");
-        		EventQueue.invokeLater(new Runnable() {
-        			public void run() { barrierSetDone(); }}
-        				);
+                // System.out.println("Barrier set returned");
+                EventQueue.invokeLater(new Runnable() {
+                        public void run() { barrierSetDone(); }}
+                    );
 
-        	} catch (Exception e) {
-        		System.err.println("Exception in threshold setting thread");
-        		e.printStackTrace();
-        	}
+            } catch (Exception e) {
+                System.err.println("Exception in threshold setting thread");
+                e.printStackTrace();
+            }
 
         }
     }
-    
+
 
 /*
  *  NO blocking limit setting in this version
  *
-    // Variables used during limit setting
-    private SetLimitThread limitThread; 
-    private Semaphore      limitDone;
-    private int            limitValue;
-    
-    
-     * Thread to carry out change of bridge limit since
-     * it may be blocked by CarControl
-     
-    class SetLimitThread extends Thread {
-        int newmax;
+ // Variables used during limit setting
+ private SetLimitThread limitThread;
+ private Semaphore      limitDone;
+ private int            limitValue;
 
-        public SetLimitThread(int newmax) {
-            this.newmax =  newmax;
 
-        }
+ * Thread to carry out change of bridge limit since
+ * it may be blocked by CarControl
 
-        public void run() {
-            // ctr.setLimit(newmax);
-            
-            System.out.println("SetLimit returned");
-            EventQueue.invokeLater(new Runnable() {
-                public void run() { endSetLimit(); }}
-            );
-            
-        }
-    }
+ class SetLimitThread extends Thread {
+ int newmax;
+
+ public SetLimitThread(int newmax) {
+ this.newmax =  newmax;
+
+ }
+
+ public void run() {
+ // ctr.setLimit(newmax);
+
+ System.out.println("SetLimit returned");
+ EventQueue.invokeLater(new Runnable() {
+ public void run() { endSetLimit(); }}
+ );
+
+ }
+ }
 */
-    
+
 
 /*
  *  NO barrier shutdown in this version
- *     
-    // Variables used during barrier shut down
-    private ShutDownThread shutDownThread = null;
-    private Semaphore      shutDownSem;
-    
-    // Thread to carry out barrier off shut down since
-    // it may be blocked by CarControl
+ *
+ // Variables used during barrier shut down
+ private ShutDownThread shutDownThread = null;
+ private Semaphore      shutDownSem;
 
-    class ShutDownThread extends Thread {
-        int newmax;
+ // Thread to carry out barrier off shut down since
+ // it may be blocked by CarControl
 
-        public void run() {
-            try {
-				ctr.barrierShutDown();
-				
-				//System.out.println("Shut down returned");
-				EventQueue.invokeLater(new Runnable() {
-				    public void run() { shutDownDone(); }}
-				);
-			} catch (Exception e) {
-				System.err.println("Exception in shut down thread");
-				e.printStackTrace();
-			}
-            
+ class ShutDownThread extends Thread {
+ int newmax;
+
+ public void run() {
+ try {
+ ctr.barrierShutDown();
+
+ //System.out.println("Shut down returned");
+EventQueue.invokeLater(new Runnable() {
+                    public void run() { shutDownDone(); }}
+                );
+            } catch (Exception e) {
+                System.err.println("Exception in shut down thread");
+                e.printStackTrace();
+            }
+
         }
     }
 */
-    
+
     void buildGUI(final Cars cars) {
-    	try {
-    		
-			EventQueue.invokeAndWait(new Runnable() {
-				
-				public void run() {
-					gnd = new Ground(cars);
-			        gp  = new JPanel();
-			        cp =  new ControlPanel(cars); 
-			        txt = new JTextArea("",8,width);
-			        txt.setEditable(false);    
-			        log = new JScrollPane(txt);
-			        log.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        try {
 
-			        setTitle("Cars");
-			        setBackground(new Color(200,200,200));
+            EventQueue.invokeAndWait(new Runnable() {
 
-			        gp.setLayout(new FlowLayout(FlowLayout.CENTER));
-			        gp.add(gnd);
+                public void run() {
+                    gnd = new Ground(cars);
+                    gp  = new JPanel();
+                    cp =  new ControlPanel(cars);
+                    txt = new JTextArea("",8,width);
+                    txt.setEditable(false);
+                    log = new JScrollPane(txt);
+                    log.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
-			        setLayout(new BorderLayout());
-			        add("North",gp);
-			        add("Center",cp);
-			        add("South",log);
+                    setTitle("Cars");
+                    setBackground(new Color(200,200,200));
 
-			        addWindowListener(new WindowAdapter () {
-			            public void windowClosing(WindowEvent e) {
-			                System.exit(1);
-			            }
-			        });
+                    gp.setLayout(new FlowLayout(FlowLayout.CENTER));
+                    gp.add(gnd);
 
-			       // bridgepresent = ctr.hasBridge();
-			       // gnd.showBridge(bridgepresent);
-			       // cp.setBridge(bridgepresent);
-			       // if (! bridgepresent) cp.disableBridge();
-			        
-			        pack();
-			        setBounds(100,100,getWidth(),getHeight());
-			        setVisible(true);
-				}
-			});
-			
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+                    setLayout(new BorderLayout());
+                    add("North",gp);
+                    add("Center",cp);
+                    add("South",log);
+
+                    addWindowListener(new WindowAdapter () {
+                        public void windowClosing(WindowEvent e) {
+                            System.exit(1);
+                        }
+                    });
+
+                   // bridgepresent = ctr.hasBridge();
+                   // gnd.showBridge(bridgepresent);
+                   // cp.setBridge(bridgepresent);
+                   // if (! bridgepresent) cp.disableBridge();
+
+                    pack();
+                    setBounds(100,100,getWidth(),getHeight());
+                    setVisible(true);
+                }
+            });
+
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public Cars() {
 
         startpos[0] = new Pos(4,2);
-        for (int no = 1; no < 9; no++) 
+        for (int no = 1; no < 9; no++)
             startpos[no] = new Pos(no < 5 ? 3 : 6 , 3+no);
 
-        for (int no = 0; no < 9; no++) 
+        for (int no = 0; no < 9; no++)
             barrierpos[no] = new Pos(no < 5 ? 4 : 5 , 3+no);
 
         for (int no = 0; no < 9; no++) { gateopen[no] = false; }
 
         buildGUI(this);
-    	
+
         // Add control
         testwrap = new CarTestWrapper(this);
 
@@ -884,7 +884,7 @@ public class Cars extends JFrame implements CarDisplayI {
     // CarTestWrapper
 
     public void barrierOn() {
-        gnd.showBarrier(true); 
+        gnd.showBarrier(true);
         barrieractive = true;
         ctr.barrierOn();
     }
@@ -895,7 +895,7 @@ public class Cars extends JFrame implements CarDisplayI {
         barrieractive = false;
     }
 
-    
+
 /*
     void barrierShutDown(Semaphore done) {
 
@@ -912,13 +912,13 @@ public class Cars extends JFrame implements CarDisplayI {
         shutDownThread = new ShutDownThread();
         shutDownThread.start();
     }
-    
+
     // Called when Shut Down Thread has ended
     void shutDownDone() {
 
         // System.out.println(" start");
-    	        cp.shutDownEnd();
- 
+                cp.shutDownEnd();
+
         if (shutDownSem != null ) shutDownSem.V();
         shutDownThread = null;
         shutDownSem = null;
@@ -928,7 +928,7 @@ public class Cars extends JFrame implements CarDisplayI {
        // System.out.println("endSyncOff end");
     }
 */
-    
+
     // Variables used during threshold setting
     private SetThread setThread = null;
     private Semaphore setSem = null;
@@ -936,39 +936,39 @@ public class Cars extends JFrame implements CarDisplayI {
 
     void  barrierSet(int k, Semaphore done) {
 
-    	// System.out.println("Cars.barrierSet called");
-    	
-    	if (setThread != null ) {
-    		println("WARNING: Threshold setting already in progress");
-    		if (done != null) done.V();
-    		return;
-    	}
+        // System.out.println("Cars.barrierSet called");
 
-    	if (k < 2 || k > 9) {
-    		println("WARNING: Threshold value out of range: " + k + " (ignored)");
-    		if (done != null) done.V();
-    		return;
-    	}
+        if (setThread != null ) {
+            println("WARNING: Threshold setting already in progress");
+            if (done != null) done.V();
+            return;
+        }
+
+        if (k < 2 || k > 9) {
+            println("WARNING: Threshold value out of range: " + k + " (ignored)");
+            if (done != null) done.V();
+            return;
+        }
 
         gnd.setBarrierEmphasis(true);
-    	cp.barrierSetBegin();
-    	// Hold values for post-processing
-    	setSem = done;
-    	setVal = k;
-    	setThread = new SetThread(k);
-    	setThread.start();
+        cp.barrierSetBegin();
+        // Hold values for post-processing
+        setSem = done;
+        setVal = k;
+        setThread = new SetThread(k);
+        setThread.start();
     }
 
     // Called when Set Thread has ended
     void barrierSetDone() {
 
-    	// System.out.println("Cars.barrierSetDone called");
-    	cp.barrierSetEnd(setVal);
+        // System.out.println("Cars.barrierSetDone called");
+        cp.barrierSetEnd(setVal);
         gnd.setBarrierEmphasis(false);
 
-    	if (setSem != null ) setSem.V();
-    	setThread = null;
-    	setSem = null;
+        if (setSem != null ) setSem.V();
+        setThread = null;
+        setSem = null;
     }
 
     void barrierClicked(boolean on) {
@@ -981,14 +981,14 @@ public class Cars extends JFrame implements CarDisplayI {
     }
 
     public void startAll() {
-        int first = barrieractive ? 0 : 1; 
+        int first = barrieractive ? 0 : 1;
         // Should not start no. 0 if no barrier
-        for (int no = first; no < 9; no++) 
+        for (int no = first; no < 9; no++)
             startCar(no);
     }
 
     public void stopAll() {
-        for (int no = 0; no < 9; no++) 
+        for (int no = 0; no < 9; no++)
             stopCar(no);
     }
 
@@ -1009,11 +1009,11 @@ public class Cars extends JFrame implements CarDisplayI {
     void showBridge(boolean active) {
         gnd.showBridge(active);
      }
-    
+
     void startFieldClick(int no) {
-        if (gateopen[no]) 
+        if (gateopen[no])
             stopCar(no);
-        else 
+        else
             startCar(no);
     }
 
@@ -1056,7 +1056,7 @@ public class Cars extends JFrame implements CarDisplayI {
             println("ERROR: No bridge at this playground!");
             return;
         }
-        
+
         if (max < 1 || max > 6) {
             println("ERROR: Illegal limit value");
             return;
@@ -1068,10 +1068,10 @@ public class Cars extends JFrame implements CarDisplayI {
         cp.enableLimit(max);
      }
 */
-    
+
  /*
  *  No blocking of setLimit in this version
- *     
+ *
     void setLimit(int max, Semaphore done) {
 
         if (! bridgepresent) {
@@ -1079,7 +1079,7 @@ public class Cars extends JFrame implements CarDisplayI {
             if (done != null) done.V();
             return;
         }
-        
+
         if (max < 1 || max > 6) {
             println("ERROR: Illegal limit value");
             if (done != null) done.V();
@@ -1099,22 +1099,22 @@ public class Cars extends JFrame implements CarDisplayI {
         limitThread = new SetLimitThread(max);
         limitThread.start();
     }
-    
+
     // Called when SetLimitThread has ended
     void endSetLimit() {
 
         System.out.println("endSetLimit start");
         if (limitDone != null ) limitDone.V();
-        
+
         gnd.setLimit(limitValue);
         cp.enableLimit(limitValue);
         limitThread = null;
         limitDone = null;
         System.out.println("endSetLimit end");
     }
-*/    
-    
-    // Implementation of CarDisplayI 
+*/
+
+    // Implementation of CarDisplayI
     // Mark and clear requests for car no. 0 are processed directly in order not
     // to fill the event queue (with risk of transiently inconsistent graphics)
 
@@ -1128,7 +1128,7 @@ public class Cars extends JFrame implements CarDisplayI {
             gnd.mark(p,c,no);
     }
 
-    // Mark area between adjacent positions p and q 
+    // Mark area between adjacent positions p and q
     public void mark(final Pos p, final Pos q, final Color c, final int no){
         if (no != 0)
             EventQueue.invokeLater(new Runnable() {
@@ -1140,24 +1140,24 @@ public class Cars extends JFrame implements CarDisplayI {
 
     // Clear area at position p
    public void clear(final Pos p){
-       if (p.col < 2 || p.col > 3 || p.row < 4 || p.row > 5) 
+       if (p.col < 2 || p.col > 3 || p.row < 4 || p.row > 5)
            EventQueue.invokeLater(new Runnable() {
                public void run() { gnd.clear(p); }}
            );
-       else 
+       else
            // In toddlers' yard - call directly
-    	   gnd.clear(p); 
+           gnd.clear(p);
     }
 
     // Clear area between adjacent positions p and q.
     public void clear(final Pos p, final Pos q){
-        if (p.col < 2 || p.col > 3 || p.row < 4 || p.row > 5) 
+        if (p.col < 2 || p.col > 3 || p.row < 4 || p.row > 5)
             EventQueue.invokeLater(new Runnable() {
                 public void run() { gnd.clear(p,q); }}
             );
         else
-        	// In toddlers' yard - call directly
-            gnd.clear(p,q); 
+            // In toddlers' yard - call directly
+            gnd.clear(p,q);
      }
 
     public Pos getStartPos(int no) {      // Identify startposition of Car no.
@@ -1167,48 +1167,48 @@ public class Cars extends JFrame implements CarDisplayI {
     public Pos getBarrierPos(int no) {    // Identify pos. at barrier line
         return barrierpos[no];
     }
-    
+
     public Pos nextPos(int no, Pos pos) {
         // Fixed tracks --- not to be modified.
         int mycol = 3+no;
         Pos nxt = pos.copy();
 
         if (no==0) {   // No. 0 is special, running its own tiny track
-            if (pos.row==5 && pos.col > 2)         nxt.col--; 
+            if (pos.row==5 && pos.col > 2)         nxt.col--;
             if (pos.col==2 && pos.row > 4)         nxt.row--;
-            if (pos.row==4 && pos.col < 3)         nxt.col++; 
-            if (pos.col==3 && pos.row < 5)         nxt.row++; 
+            if (pos.row==4 && pos.col < 3)         nxt.col++;
+            if (pos.col==3 && pos.row < 5)         nxt.row++;
         }
 
-         
+
         else if (no < 5) {  // Car going around clockwise (to the right)
             int myrow = (no < 3? 8 : 9);
-            if (pos.row==myrow && pos.col > 0)     nxt.col--; 
+            if (pos.row==myrow && pos.col > 0)     nxt.col--;
             if (pos.col==0 && pos.row > 1)         nxt.row--;
             if (pos.row==1 && pos.col < mycol)     nxt.col++;
             if (pos.col==mycol && pos.row < myrow) nxt.row++;
         }
 
         else if (no >= 5) {  // Car going around anti-clockwise (to the left)
-            if (pos.row==0  && pos.col > 0)        nxt.col--; 
+            if (pos.row==0  && pos.col > 0)        nxt.col--;
             if (pos.col==0  && pos.row < 9)        nxt.row++;
-            if (pos.row==9  && pos.col < 2)        nxt.col++; 
+            if (pos.row==9  && pos.col < 2)        nxt.col++;
             // Round the corner
             if (pos.row==9  && pos.col == 2)       nxt.row++;
-            if (pos.row==10  && pos.col < mycol)   nxt.col++; 
-            if (pos.col==mycol && pos.row > 0)     nxt.row--; 
+            if (pos.row==10  && pos.col < mycol)   nxt.col++;
+            if (pos.col==mycol && pos.row > 0)     nxt.row--;
         }
 
         return nxt;
     }
 
     public void println(String m) {
-        // Print (error) message on screen 
+        // Print (error) message on screen
         Runnable job = new LinePrinter(m);
         EventQueue.invokeLater(job);
     }
 
-    public boolean isSlow(Pos pos) { 
+    public boolean isSlow(Pos pos) {
         return pos.col== 0 && slowdown;
     }
 
@@ -1216,17 +1216,17 @@ public class Cars extends JFrame implements CarDisplayI {
 
 
 /**
- * For the methods of the CarTestI interface this class wraps them to 
+ * For the methods of the CarTestI interface this class wraps them to
  * similar events to be processed by the gui thread.
  */
 class CarTestWrapper implements CarTestingI {
 
     Cars cars;
-    
+
     public CarTestWrapper(Cars cars) {
         this.cars = cars;
     }
-    
+
     public void startCar(final int no) {
         EventQueue.invokeLater(new Runnable() {
             public void run() { cars.startCar(no); }}
@@ -1277,8 +1277,8 @@ class CarTestWrapper implements CarTestingI {
         } catch (InterruptedException e) {}
 
     }
-*/  
-    
+*/
+
     // This should wait until barrier has been set
     // For this, a one-time semaphore is used (as simple Future)
     public void barrierSet(final int k) {
@@ -1291,7 +1291,7 @@ class CarTestWrapper implements CarTestingI {
         } catch (InterruptedException e) {}
 
     }
-    
+
 /*
     public void setLimit(final int k) {
         EventQueue.invokeLater(new Runnable() {
@@ -1299,13 +1299,13 @@ class CarTestWrapper implements CarTestingI {
         );
     }
 */
-    
+
      public void setSlow(final boolean slowdown) {
          EventQueue.invokeLater(new Runnable() {
              public void run() { cars.setSlow(slowdown); }}
          );
      }
- 
+
      public void removeCar(final int no) {
          EventQueue.invokeLater(new Runnable() {
              public void run() { cars.removeCar(no); }}
@@ -1317,7 +1317,7 @@ class CarTestWrapper implements CarTestingI {
              public void run() { cars.restoreCar(no); }}
          );
      }
-     
+
     public void setSpeed(final int no, final int speed) {
         EventQueue.invokeLater(new Runnable() {
             public void run() { cars.setSpeed(no, speed); }}
@@ -1343,27 +1343,11 @@ class CarTestWrapper implements CarTestingI {
         } catch (InterruptedException e) {}
 
     }
-*/    
-    
+*/
+
     // Println already wrapped in Cars
     public void println(final String message) {
         cars.println(message);
     }
 
  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

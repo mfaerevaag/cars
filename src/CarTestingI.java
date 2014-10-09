@@ -1,4 +1,4 @@
-//Specification of Car Testing interface 
+//Specification of Car Testing interface
 //Mandatory assignment
 //Course 02158 Concurrent Programming, DTU, Fall 2014
 
@@ -27,4 +27,3 @@ interface CarTestingI {
     public void setSpeed(int no, int speed);  // Set base speed (no GUI)
     public void setVariation(int no,int var); // Set variation  (no GUI)
 }
-
