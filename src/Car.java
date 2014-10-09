@@ -178,6 +178,19 @@ public class Car extends Thread {
                 //  Move to new position
                 cd.clear(curpos);
                 cd.mark(curpos,newpos,col,no);
+
+//                Pos testPos = new Pos(9,3);
+//                cd.mark(testPos, Color.cyan,3);
+//                Pos testPos2 = new Pos(0,1);
+//                cd.mark(testPos2, Color.cyan,5);
+//                Pos testPos3 = new Pos(8,1);
+//                cd.mark(testPos3, Color.cyan,1);
+//
+//                Pos testPos4 = new Pos(1,1);
+//                cd.mark(testPos4, Color.magenta,2);
+//                Pos testPos5 = new Pos(10,2);
+//                cd.mark(testPos5, Color.magenta,5);
+
                 sleep(speed());
 
                 cd.clear(curpos,newpos);
