@@ -18,7 +18,7 @@ public class CarControl implements CarControlI {
         this.cd = cd;
         this.car  = new Car[9];
         this.gate = new Gate[9];
-        this.alley = new Alley(cd);
+        this.alley = new Alley();
         this.semap = new Semaphore[MAP_WIDTH][MAP_HEIGHT];
 
 
