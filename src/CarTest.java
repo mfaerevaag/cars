@@ -18,11 +18,8 @@ public class CarTest extends Thread {
         try {
             switch (testno) {
             case 0:
-                // Demonstration of startAll/stopAll.
-                // Should let the cars go one round (unless very fast)
-                cars.startAll();
-                sleep(3000);
-                cars.stopAll();
+                cars.startCar(1);
+                cars.startCar(5);
                 break;
 
             case 19:
