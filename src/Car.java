@@ -12,18 +12,19 @@ public class Car extends Thread {
     Pos barpos;                      // Barrierpositon (provided by GUI)
     Color col;                       // Car  color
     Gate mygate;                     // Gate at startposition
+    Alley alley;
     Semaphore[][] semap; // The entire map as semaphores
-
 
     int speed;                       // Current car speed
     Pos curpos;                      // Current position
     Pos newpos;                      // New position to go to
 
-    public Car(int no, CarDisplayI cd, Gate g, Semaphore[][] semap) {
+    public Car(int no, CarDisplayI cd, Gate g, Semaphore[][] semap, Alley alley) {
         this.no = no;
         this.cd = cd;
 
         this.mygate = g;
+        this.alley = alley;
         this.semap = semap;
         this.startpos = cd.getStartPos(no);
         this.barpos = cd.getBarrierPos(no);  // For later use
@@ -85,7 +86,70 @@ public class Car extends Thread {
         return pos.equals(startpos);
     }
 
-   public void run() {
+    boolean atAlleyEnterance(Pos pos) {
+        boolean result;
+
+        switch (this.no) {
+        case 0:
+            result = false;
+            break;
+
+        case 1:
+        case 2:
+            result = (pos.col == 1 && pos.row == 8);
+            break;
+
+        case 3:
+        case 4:
+            result = (pos.col == 3 && pos.row == 9);
+            break;
+
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+            result = (pos.col == 1 && pos.row == 0);
+            break;
+
+        default:
+            result = false;
+            break;
+        }
+
+        return result;
+    }
+
+    boolean atAlleyExit(Pos pos) {
+        boolean result;
+
+        switch (this.no) {
+        case 0:
+            result = false;
+            break;
+
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            result = (pos.col == 1 && pos.row == 1);
+            break;
+
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+            result = (pos.col == 2 && pos.row == 10);
+            break;
+
+        default:
+            result = false;
+            break;
+        }
+
+        return result;
+    }
+
+    public void run() {
         try {
 
             speed = chooseSpeed();
@@ -103,7 +167,13 @@ public class Car extends Thread {
                 newpos = nextPos(curpos);
 
                 // TODO: check if newpos is free.
+                cd.println("[" + no + "] nextpos: " + this.getSemaphoreFromPos(newpos).toString());
                 this.getSemaphoreFromPos(newpos).P();
+
+                if (atAlleyEnterance(curpos))
+                    this.alley.enter(this.no);
+                else if (atAlleyExit(curpos))
+                    this.alley.leave(this.no);
 
                 //  Move to new position
                 cd.clear(curpos);
