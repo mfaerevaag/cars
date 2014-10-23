@@ -22,3 +22,8 @@ cars.iml
 /report/*.out
 /report/*.pdf
 /report/*.toc
+
+/spin/spin1/
+/spin/spin2/
+/spin/spin3/
+/spin/spin4/
