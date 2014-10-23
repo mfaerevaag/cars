@@ -18,7 +18,14 @@ inline V(sema_selector) {
 }
 
 inline P(sema_selector) {
-	skip
+	if
+	:: (sema_selector == mutex_down_t 	&& mutex_down > 0) -> mutex_down--;
+
+	:: (sema_selector == mutex_up_t 	&& mutex_up > 0) -> mutex_up--;
+
+	:: (sema_selector == alley_free_t 	&& alley_free > 0) -> alley_free--;
+
+	fi
 }
 
 inline enter(car_type) {
