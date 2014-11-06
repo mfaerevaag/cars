@@ -27,7 +27,8 @@ public class Semaphore {
         notify();
     }
 
-    public String toString() { // Give semaphore value (for debugging only)
+    // Give semaphore value (for debugging only)
+    public String toString() {
         return ""+s;
     }
 

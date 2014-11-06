@@ -4,8 +4,8 @@ enum Direction {
 
 public class Alley {
 
-    int upCount, downCount;
-    Semaphore alleyFree, mutexUp, mutexDown;
+    private int upCount, downCount;
+    private Semaphore alleyFree, mutexUp, mutexDown;
 
     public Alley() {
         this.upCount = 0;
@@ -28,7 +28,7 @@ public class Alley {
 
             this.mutexUp.V();
 
-        }else {
+        } else {
             this.mutexDown.P();
 
             this.downCount++;

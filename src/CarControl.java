@@ -8,7 +8,8 @@ public class CarControl implements CarControlI {
     CarDisplayI cd;           // Reference to GUI
     Car[] car;                // Cars
     Gate[] gate;              // Gates
-    Alley alley;
+    Alley alley;              // Alley
+    Barrier barrier;          // Barrier
 
     static final int MAP_WIDTH = 12, MAP_HEIGHT = 11;
 
@@ -19,10 +20,11 @@ public class CarControl implements CarControlI {
         this.car  = new Car[9];
         this.gate = new Gate[9];
         this.alley = new Alley();
+        this.barrier = new Barrier();
         this.semap = new Semaphore[MAP_WIDTH][MAP_HEIGHT];
 
 
-        for(int x = 0; x < MAP_WIDTH; x++) {
+        for (int x = 0; x < MAP_WIDTH; x++) {
             for(int y = 0; y < MAP_HEIGHT; y++) {
                 // Mark all spots on the semap as free to use
                 this.semap[x][y] = new Semaphore(1);
@@ -31,7 +33,7 @@ public class CarControl implements CarControlI {
 
         for (int no = 0; no < 9; no++) {
             this.gate[no] = new Gate();
-            this.car[no] = new Car(no,cd,gate[no], this.semap, this.alley);
+            this.car[no] = new Car(no,cd,gate[no], this.semap, this.alley, this.barrier);
             this.car[no].start();
 
             // Used to occupy the spot where the car is spawned
@@ -50,11 +52,13 @@ public class CarControl implements CarControlI {
     }
 
     public void barrierOn() {
-        cd.println("Barrier On not implemented in this version");
+        cd.println("Barrier on");
+        this.barrier.on();
     }
 
     public void barrierOff() {
-        cd.println("Barrier Off not implemented in this version");
+        cd.println("Barrier off");
+        this.barrier.off();
     }
 
     public void barrierSet(int k) {

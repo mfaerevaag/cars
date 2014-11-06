@@ -13,18 +13,20 @@ public class Car extends Thread {
     Color col;                       // Car  color
     Gate mygate;                     // Gate at startposition
     Alley alley;
+    Barrier barrier;
     Semaphore[][] semap; // The entire map as semaphores
 
     int speed;                       // Current car speed
     Pos curpos;                      // Current position
     Pos newpos;                      // New position to go to
 
-    public Car(int no, CarDisplayI cd, Gate g, Semaphore[][] semap, Alley alley) {
+    public Car(int no, CarDisplayI cd, Gate g, Semaphore[][] semap, Alley alley, Barrier barrier) {
         this.no = no;
         this.cd = cd;
 
         this.mygate = g;
         this.alley = alley;
+        this.barrier = barrier;
         this.semap = semap;
         this.startpos = cd.getStartPos(no);
         this.barpos = cd.getBarrierPos(no);  // For later use
@@ -86,34 +88,65 @@ public class Car extends Thread {
         return pos.equals(startpos);
     }
 
-    boolean atAlleyEnterance(Pos pos) {
+    boolean atBarrier(Pos pos) {
         boolean result;
+        int col = this.no + 3;
 
         switch (this.no) {
         case 0:
-            result = false;
+            result = (pos.col == 3 && pos.row == 4);
             break;
 
         case 1:
         case 2:
-            result = (pos.col == 2 && pos.row == 8);
-            break;
-
         case 3:
         case 4:
-            result = (pos.col == 4 && pos.row == 9);
+            result = (pos.col == col && pos.row == 4);
             break;
 
         case 5:
         case 6:
         case 7:
         case 8:
-            result = (pos.col == 1 && pos.row == 0);
+            result = (pos.col == col && pos.row == 5);
             break;
 
         default:
             result = false;
             break;
+        }
+
+        return result;
+    }
+
+    boolean atAlleyEnterance(Pos pos) {
+        boolean result;
+
+        switch (this.no) {
+            case 0:
+                result = false;
+                break;
+
+            case 1:
+            case 2:
+                result = (pos.col == 2 && pos.row == 8);
+                break;
+
+            case 3:
+            case 4:
+                result = (pos.col == 4 && pos.row == 9);
+                break;
+
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+                result = (pos.col == 1 && pos.row == 0);
+                break;
+
+            default:
+                result = false;
+                break;
         }
 
         return result;
@@ -171,8 +204,11 @@ public class Car extends Thread {
                 if (atAlleyEnterance(curpos)) {
                     this.alley.enter(this.no);
                 }
-                if (atAlleyExit(curpos)) {
+                else if (atAlleyExit(curpos)) {
                     this.alley.leave(this.no);
+                }
+                else if (atBarrier(curpos)) {
+                    this.barrier.sync();
                 }
 
                 //  Move to new position
@@ -180,8 +216,9 @@ public class Car extends Thread {
                 cd.mark(curpos,newpos,col,no);
 
                 //TODO: remove in the end. A means to figure out the coordinate system
-//                Pos testPos = new Pos(9,3);
-//                cd.mark(testPos, Color.cyan,3);
+                // Pos testPos = new Pos(4,3);
+                // cd.mark(testPos, Color.cyan,0);
+
 
                 sleep(speed());
 
