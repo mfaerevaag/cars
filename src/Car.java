@@ -208,7 +208,7 @@ public class Car extends Thread {
                     this.alley.leave(this.no);
                 }
                 else if (atBarrier(curpos)) {
-                    this.barrier.sync();
+                    this.barrier.sync(this.no);
                 }
 
                 //  Move to new position

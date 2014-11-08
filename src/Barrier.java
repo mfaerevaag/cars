@@ -1,57 +1,83 @@
+import java.util.Arrays;
+
 public class Barrier {
 
     private boolean active;
     private int threshold;
     private int count;
-    private Semaphore barrier, mutex, activeMutex;
+    private int roundCount;
+    private int[] carCurrentRound;
+    private Semaphore barrier, mutex;
 
     public Barrier() {
         this.active = false;
         this.threshold = 9; // TODO: extend
         this.count = 0;
+        this.roundCount = 0;
+        this.carCurrentRound = new int[9];
         this.barrier = new Semaphore(0);
         this.mutex = new Semaphore(1);
-        this.activeMutex = new Semaphore(1);
     }
 
     /**
      * Wait for others to arrive (if barrier active)
      */
-    public void sync() throws InterruptedException {
-        this.activeMutex.P();
+    public void sync(int carNo) throws InterruptedException {
 
-        if (this.active) {
+        this.mutex.P();
+        boolean activeCopy = this.active;
+        this.mutex.V();
 
+        if (activeCopy) {
             this.mutex.P();
 
             this.count++;
-            System.out.println("inc count = " + this.count);
 
-            if (this.count >= this.threshold) {
+            if (this.count < this.threshold) { // All cars, except one
+
+
+                boolean freeToIgnore = this.carCurrentRound[carNo] != this.roundCount;
+                this.mutex.V();
+
+                if (! freeToIgnore)
+                    this.barrier.P();
+
+                this.mutex.P();
+                this.carCurrentRound[carNo]++;
+                System.out.println(Arrays.toString(this.carCurrentRound));
+                this.mutex.V();
+
+            } else { // Final car needed to start a new round
+
+                this.roundCount++;
+                System.out.println("RoundCount updated:" + roundCount);
 
                 this.free(this.count - 1);
                 this.count = 0;
 
+                this.carCurrentRound[carNo]++;
+                System.out.println(Arrays.toString(this.carCurrentRound));
                 this.mutex.V();
-
-            } else {
-                this.mutex.V();
-
-                this.barrier.P();
             }
         }
 
-        this.activeMutex.V();
     }
 
     /**
      * Activate barrier
      */
     public void on() {
+
         try {
-            this.activeMutex.P();
-            this.active = true;
-            this.activeMutex.V();
+
+            this.mutex.P();
+            if (!this.active) {
+                this.active = true;
+
+                this.roundCount = 0;
+                this.carCurrentRound = new int[9];
+            }
+            this.mutex.V();
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -62,21 +88,20 @@ public class Barrier {
      * Deactivate barrier
      */
     public void off() {
+
         try {
-            this.activeMutex.P();
 
             if (this.active) {
+
                 this.mutex.P();
 
                 this.active = false;
-
                 this.free(this.count);
                 this.count = 0;
 
                 this.mutex.V();
             }
 
-            this.activeMutex.V();
 
         } catch (InterruptedException e) {
             e.printStackTrace();
