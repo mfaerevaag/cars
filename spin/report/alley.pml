@@ -1,8 +1,6 @@
-#define ndown	1
-#define nup		1
+#define ndown	2
+#define nup		2
 
-mtype = { mutex_up_t, mutex_down_t, alley_free_t }
-mtype = { up_t, down_t }
 
 //The semaphores
 short mutex_down 	= 1;
@@ -11,151 +9,152 @@ short alley_free 	= 1;
 short up_count 	= 0;
 short down_count	= 0;
 
-/*inline V(sema_selector) {
-	if
-	:: (sema_selector == mutex_down_t) -> mutex_down++;
-	:: (sema_selector == mutex_up_t) -> mutex_up++;
-	:: (sema_selector == alley_free_t) -> alley_free++;
-	:: else -> skip;
-	fi
-}*/
 
-inline V_down() {
-	mutex_down++;
+short entering_count 	= 0;
+
+short up_in_alley = 0;
+short down_in_alley = 0;
+
+
+inline P_down() {
+	atomic {
+		mutex_down > 0;
+		mutex_down--;
+	}
 }
+
+ 
+inline P_up() {
+	atomic{ 
+		mutex_up > 0;
+		mutex_up--;
+	}
+}
+
+inline P_alley() {
+	atomic{
+		alley_free > 0;
+		alley_free--;
+	}
+}
+
 
 inline V_up() {
 	mutex_up++;
+}
+
+
+inline V_down() {
+	mutex_down++;
 }
 
 inline V_alley() {
 	alley_free++;
 }
 
-inline P_down() {
-	if
-	:: (mutex_down > 0) ->mutex_down--;
-	:: else -> skip;
-	fi
-}
-
-inline P_up() {
-	if
-	:: (mutex_up > 0) -> 	mutex_up--;
-	:: else -> skip;
-	fi
-}
-
-inline P_alley() {
-	if
-	:: (alley_free > 0) ->	alley_free--;
-	:: else -> skip;
-	fi
-}
-
-/*
-inline P(sema_selector) {
-	if
-	:: (sema_selector == mutex_down_t 	&& mutex_down > 0) ->mutex_down--;
-
-	:: (sema_selector == mutex_up_t 	&& mutex_up > 0) -> 	mutex_up--;
-
-	:: (sema_selector == alley_free_t 	&& alley_free > 0) ->	alley_free--;
-	:: else -> skip;
-	fi;
-}
-*/
-inline enter(car_type) {
-
-	if
-	:: (car_type == up_t) ->
-// reacahes this
-//		P(mutex_up_t);
+inline enter_up() {
 		P_up();
 
-//TODO: skip as else-clause
+// Debugging. Proves that only one up-going car is entering at any instant
+entering_count++;
+assert(entering_count == 1);
 
 		up_count++;
 
 		if
 		:: (up_count == 1) ->
-//			P(alley_free_t);
 			P_alley();
 		:: else -> skip;
 		fi;
 
-//		V(mutex_up_t);
-		V_up();
+		up_in_alley++;
 
-	:: (car_type == down_t) ->
-//		P(mutex_down_t);
+entering_count--;
+		V_up();
+}
+
+inline leave_up() {
+		P_up();
+
+		up_in_alley--;
+
+		up_count--;		
+		if
+		:: (up_count == 0) ->
+			V_alley();
+		:: else -> skip;
+		fi;
+
+
+		V_up();
+}
+
+
+
+inline enter_down() {
 		P_down();
 
 		down_count++;		
 		if
 		:: (down_count == 1) ->
-//			P(alley_free_t);
 			P_alley();
 		:: else -> skip;
 		fi;
+	
+		down_in_alley++;
 
-//		V(mutex_down_t);
 		V_down();
-
-	:: else -> skip;
-	fi
 }
 
-inline leave(car_type) {
-	if
-	:: (car_type == up_t) ->
-//		P(mutex_up_t);
-		P_up();
-
-		up_count--;		
-		if
-		:: (up_count == 0) ->
-//			V(alley_free_t);
-			V_alley();
-		:: else -> skip;
-		fi;
-
-//		V(mutex_up_t);
-		V_up();
 
 
-	:: (car_type == down_t) ->
-//		P(mutex_down_t);
+inline leave_down() {
 		P_down();
+
+		down_in_alley--;
 
 		down_count--;		
 		if
 		:: (down_count == 0) ->
-//			V(alley_free_t);
 			V_alley();
 		:: else -> skip;
 		fi;
 
-//		V(mutex_down_t);
+
 		V_down();
-	fi
 }
+
 
 active [nup] proctype car_up(){
-do
-	::
-	 enter(up_t); leave(up_t); break;
-/*
-	:: leave(up_t);
-	:: break;*/
-od
+
+enter_up();
+
+// Inside alley
+assert(down_in_alley == 0);
+
+leave_up();
+enter_up();
+
+//assert(down_in_alley == 0);
+
+leave_up();
+
 }
 
+
+
 active [ndown] proctype car_down(){
-do
- 	:: enter(down_t);
-	leave(down_t);	
-	break;
-od;
-skip;
+
+	enter_down();
+	
+	// Inside the alley
+
+	leave_down();	
+	enter_down();
+
+// Inside the alley
+
+	leave_down();	
+
 }
+
