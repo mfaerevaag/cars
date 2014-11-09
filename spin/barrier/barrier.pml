@@ -11,6 +11,9 @@ short incoming_count 		= 0;
 short leaving_count 		= 0;
 short threshold		= ncars;
 
+// Testing
+short max_rounds 		= 0;
+
 inline V_mutex() {	mutex++;	}
 inline P_mutex() {
 	atomic {
@@ -88,9 +91,48 @@ inline free_leaving(n) {
 // BEFORE BARRIER
 
 
+inline count_round() {
+	atomic {
+		round_count++;
+
+		if
+		:: round_count > max_rounds -> max_rounds = round_count;
+		:: else -> skip;
+		fi;
+	}
+}
+
 active [ncars] proctype car_up(){
+	short round_count = 0;
 
 	sync();
+	count_round();
+	assert ( round_count == max_rounds);
+	assert(max_rounds == 1);
+	assert(round_count == 1);
+
+
+	sync();
+	count_round();
+	assert ( round_count == max_rounds);
+	assert(max_rounds == 2);
+	assert(round_count == 2);
+
+
+	sync();
+	count_round();
+	assert ( round_count == max_rounds);
+	assert(max_rounds == 3);
+	assert(round_count == 3);
+
+
+
+	sync();
+	count_round();
+	assert ( round_count == max_rounds);
+	assert(max_rounds == 4);
+	assert(round_count == 4);
+
 
 }
 
