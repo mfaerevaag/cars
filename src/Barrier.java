@@ -19,12 +19,6 @@ public class Barrier {
         this.mutex = new Semaphore(1);
     }
 
-
-    public synchronized void syncMonitor() {
-        
-    }
-
-
     /**
      * Wait for others to arrive (if barrier active)
      */

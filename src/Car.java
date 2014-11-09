@@ -14,14 +14,15 @@ public class Car extends Thread {
     Gate mygate;                     // Gate at startposition
 //    Alley alley;
     AlleyMonitor alley;
-    Barrier barrier;
+//    Barrier barrier;
+    BarrierMonitor barrier;
     Semaphore[][] semap; // The entire map as semaphores
 
     int speed;                       // Current car speed
     Pos curpos;                      // Current position
     Pos newpos;                      // New position to go to
 
-    public Car(int no, CarDisplayI cd, Gate g, Semaphore[][] semap, AlleyMonitor alley, Barrier barrier) {
+    public Car(int no, CarDisplayI cd, Gate g, Semaphore[][] semap, AlleyMonitor alley, BarrierMonitor barrier) {
         this.no = no;
         this.cd = cd;
 

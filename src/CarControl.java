@@ -10,7 +10,8 @@ public class CarControl implements CarControlI {
     Gate[] gate;              // Gates
 //    Alley alley;              // Alley
     AlleyMonitor alley;
-    Barrier barrier;          // Barrier
+//    Barrier barrier;          // Barrier
+    BarrierMonitor barrier;
 
     static final int MAP_WIDTH = 12, MAP_HEIGHT = 11;
 
@@ -22,7 +23,8 @@ public class CarControl implements CarControlI {
         this.gate = new Gate[9];
 //        this.alley = new Alley();
         this.alley = new AlleyMonitor();
-        this.barrier = new Barrier();
+//        this.barrier = new Barrier();
+        this.barrier = new BarrierMonitor();
         this.semap = new Semaphore[MAP_WIDTH][MAP_HEIGHT];
 
 
