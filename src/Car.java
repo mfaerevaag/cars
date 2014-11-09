@@ -12,7 +12,8 @@ public class Car extends Thread {
     Pos barpos;                      // Barrierpositon (provided by GUI)
     Color col;                       // Car  color
     Gate mygate;                     // Gate at startposition
-    Alley alley;
+//    Alley alley;
+    AlleyMonitor alley;
     Barrier barrier;
     Semaphore[][] semap; // The entire map as semaphores
 
@@ -20,7 +21,7 @@ public class Car extends Thread {
     Pos curpos;                      // Current position
     Pos newpos;                      // New position to go to
 
-    public Car(int no, CarDisplayI cd, Gate g, Semaphore[][] semap, Alley alley, Barrier barrier) {
+    public Car(int no, CarDisplayI cd, Gate g, Semaphore[][] semap, AlleyMonitor alley, Barrier barrier) {
         this.no = no;
         this.cd = cd;
 
@@ -208,7 +209,7 @@ public class Car extends Thread {
                     this.alley.leave(this.no);
                 }
                 else if (atBarrier(curpos)) {
-                    this.barrier.sync(this.no);
+                    this.barrier.sync();
                 }
 
                 //  Move to new position

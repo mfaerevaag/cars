@@ -8,7 +8,8 @@ public class CarControl implements CarControlI {
     CarDisplayI cd;           // Reference to GUI
     Car[] car;                // Cars
     Gate[] gate;              // Gates
-    Alley alley;              // Alley
+//    Alley alley;              // Alley
+    AlleyMonitor alley;
     Barrier barrier;          // Barrier
 
     static final int MAP_WIDTH = 12, MAP_HEIGHT = 11;
@@ -19,7 +20,8 @@ public class CarControl implements CarControlI {
         this.cd = cd;
         this.car  = new Car[9];
         this.gate = new Gate[9];
-        this.alley = new Alley();
+//        this.alley = new Alley();
+        this.alley = new AlleyMonitor();
         this.barrier = new Barrier();
         this.semap = new Semaphore[MAP_WIDTH][MAP_HEIGHT];
 

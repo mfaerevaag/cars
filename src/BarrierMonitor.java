@@ -1,15 +1,11 @@
-enum BarrierSelector {
-    INCOMING, LEAVING
-}
-
-public class Barrier {
+public class BarrierMonitor {
 
     private boolean active;
     private int threshold, incomingCount, leavingCount;
 
     private Semaphore barrierIncoming, barrierLeaving, mutex;
 
-    public Barrier() {
+    public BarrierMonitor() {
         this.active = false;
         this.threshold = 9;
         this.incomingCount = 0;
@@ -18,12 +14,6 @@ public class Barrier {
         this.barrierLeaving = new Semaphore(0);
         this.mutex = new Semaphore(1);
     }
-
-
-    public synchronized void syncMonitor() {
-        
-    }
-
 
     /**
      * Wait for others to arrive (if barrier active)
