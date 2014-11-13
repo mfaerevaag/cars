@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.io.InterruptedIOException;
 
 public class Car extends Thread {
 
@@ -41,6 +42,14 @@ public class Car extends Thread {
             this.variation = 0;
             this.setPriority(Thread.MAX_PRIORITY);
         }
+    }
+
+    public synchronized void remove() {
+        this.interrupt();
+    }
+
+    public synchronized void restore() {
+        // TODO
     }
 
     public synchronized void setSpeed(int speed) {
@@ -229,6 +238,9 @@ public class Car extends Thread {
                 this.getSemaphoreFromPos(curpos).V();
                 curpos = newpos;
             }
+
+        } catch (InterruptedException e) {
+            System.out.println("Car no. " + no + " interrupted");
 
         } catch (Exception e) {
             cd.println("Exception in Car no. " + no);

@@ -6,7 +6,7 @@
 public class CarControl implements CarControlI {
 
     CarDisplayI cd;           // Reference to GUI
-    Car[] car;                // Cars
+    Car[] cars;                // Cars
     Gate[] gate;              // Gates
     AlleyMonitor alley;       // Alley
     BarrierMonitor barrier;   // Barrier
@@ -17,7 +17,7 @@ public class CarControl implements CarControlI {
 
     public CarControl(CarDisplayI cd) {
         this.cd = cd;
-        this.car  = new Car[9];
+        this.cars = new Car[9];
         this.gate = new Gate[9];
         this.alley = new AlleyMonitor();
         this.barrier = new BarrierMonitor();
@@ -32,11 +32,11 @@ public class CarControl implements CarControlI {
 
         for (int no = 0; no < 9; no++) {
             this.gate[no] = new Gate();
-            this.car[no] = new Car(no,cd,gate[no], this.semap, this.alley, this.barrier);
-            this.car[no].start();
+            this.cars[no] = new Car(no,cd,gate[no], this.semap, this.alley, this.barrier);
+            this.cars[no].start();
 
             // Used to occupy the spot where the car is spawned
-            Pos startPos = this.car[no].startpos;
+            Pos startPos = this.cars[no].startpos;
             this.semap[startPos.col][startPos.row] = new Semaphore(0);
         }
 
@@ -76,21 +76,36 @@ public class CarControl implements CarControlI {
     /* Car maintenance */
 
     public void removeCar(int no) {
-        cd.println("Remove Car not implemented in this version");
+        Car car = this.cars[no];
+
+        if (car == null) {
+            cd.println("Car " + no + " already removed");
+            return;
+        }
+
+        car.remove();
+        this.cars[no] = null;
     }
 
     public void restoreCar(int no) {
-        cd.println("Restore Car not implemented in this version");
+        Car car = this.cars[no];
+
+        if (car != null) {
+            cd.println("Car " + no + " not removed");
+            return;
+        }
+
+        // TODO
     }
 
     /* Speed settings for testing purposes */
 
     public void setSpeed(int no, int speed) {
-        car[no].setSpeed(speed);
+        cars[no].setSpeed(speed);
     }
 
     public void setVariation(int no, int var) {
-        car[no].setVariation(var);
+        cars[no].setVariation(var);
     }
 
 }
