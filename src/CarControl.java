@@ -8,10 +8,8 @@ public class CarControl implements CarControlI {
     CarDisplayI cd;           // Reference to GUI
     Car[] car;                // Cars
     Gate[] gate;              // Gates
-//    Alley alley;              // Alley
-    AlleyMonitor alley;
-//    Barrier barrier;          // Barrier
-    BarrierMonitor barrier;
+    AlleyMonitor alley;       // Alley
+    BarrierMonitor barrier;   // Barrier
 
     static final int MAP_WIDTH = 12, MAP_HEIGHT = 11;
 
@@ -21,12 +19,9 @@ public class CarControl implements CarControlI {
         this.cd = cd;
         this.car  = new Car[9];
         this.gate = new Gate[9];
-//        this.alley = new Alley();
         this.alley = new AlleyMonitor();
-//        this.barrier = new Barrier();
         this.barrier = new BarrierMonitor();
         this.semap = new Semaphore[MAP_WIDTH][MAP_HEIGHT];
-
 
         for (int x = 0; x < MAP_WIDTH; x++) {
             for(int y = 0; y < MAP_HEIGHT; y++) {
@@ -47,13 +42,17 @@ public class CarControl implements CarControlI {
 
     }
 
-   public void startCar(int no) {
+    /* Car movement */
+
+    public void startCar(int no) {
         this.gate[no].open();
     }
 
     public void stopCar(int no) {
         this.gate[no].close();
     }
+
+    /* Barrier */
 
     public void barrierOn() {
         cd.println("Barrier on");
@@ -67,12 +66,14 @@ public class CarControl implements CarControlI {
 
     public void barrierSet(int k) {
         cd.println("Barrier threshold setting not implemented in this version");
-         // This sleep is for illustrating how blocking affects the GUI
+        // This sleep is for illustrating how blocking affects the GUI
         // Remove when feature is properly implemented.
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {}
-     }
+    }
+
+    /* Car maintenance */
 
     public void removeCar(int no) {
         cd.println("Remove Car not implemented in this version");
