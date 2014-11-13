@@ -131,19 +131,19 @@ public class Car extends Thread {
 
             case 1:
             case 2:
-                result = (pos.col == 2 && pos.row == 8);
+                result = (pos.col == 1 && pos.row == 8);
                 break;
 
             case 3:
             case 4:
-                result = (pos.col == 4 && pos.row == 9);
+                result = (pos.col == 3 && pos.row == 9);
                 break;
 
             case 5:
             case 6:
             case 7:
             case 8:
-                result = (pos.col == 1 && pos.row == 0);
+                result = (pos.col == 0 && pos.row == 0);
                 break;
 
             default:
@@ -201,8 +201,6 @@ public class Car extends Thread {
 
                 newpos = nextPos(curpos);
 
-                this.getSemaphoreFromPos(newpos).P();
-
                 if (atAlleyEnterance(curpos)) {
                     this.alley.enter(this.no);
                 }
@@ -212,6 +210,8 @@ public class Car extends Thread {
                 else if (atBarrier(curpos)) {
                     this.barrier.sync();
                 }
+
+                this.getSemaphoreFromPos(newpos).P();
 
                 //  Move to new position
                 cd.clear(curpos);
