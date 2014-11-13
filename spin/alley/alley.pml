@@ -1,5 +1,5 @@
-#define ndown	2
-#define nup		2
+#define ndown	4
+#define nup		4
 
 
 //The semaphores
@@ -23,9 +23,9 @@ inline P_down() {
 	}
 }
 
- 
+
 inline P_up() {
-	atomic{ 
+	atomic{
 		mutex_up > 0;
 		mutex_up--;
 	}
@@ -78,7 +78,7 @@ inline leave_up() {
 
 		up_in_alley--;
 
-		up_count--;		
+		up_count--;
 		if
 		:: (up_count == 0) ->
 			V_alley();
@@ -94,13 +94,13 @@ inline leave_up() {
 inline enter_down() {
 		P_down();
 
-		down_count++;		
+		down_count++;
 		if
 		:: (down_count == 1) ->
 			P_alley();
 		:: else -> skip;
 		fi;
-	
+
 		down_in_alley++;
 
 		V_down();
@@ -113,7 +113,7 @@ inline leave_down() {
 
 		down_in_alley--;
 
-		down_count--;		
+		down_count--;
 		if
 		:: (down_count == 0) ->
 			V_alley();
@@ -126,35 +126,29 @@ inline leave_down() {
 
 
 active [nup] proctype car_up(){
+    do::
 
-enter_up();
+    enter_up();
 
-// Inside alley
-assert(down_in_alley == 0);
+    // Inside alley
+    assert(down_in_alley == 0 && up_in_alley > 0);
 
-leave_up();
-enter_up();
+    leave_up();
 
-//assert(down_in_alley == 0);
-
-leave_up();
-
+    od;
 }
 
 
 
 active [ndown] proctype car_down(){
+    do::
 
 	enter_down();
-	
+
 	// Inside the alley
+    assert(up_in_alley == 0 && down_in_alley > 0);
 
-	leave_down();	
-	enter_down();
+	leave_down();
 
-// Inside the alley
-
-	leave_down();	
-
+    od;
 }
-
