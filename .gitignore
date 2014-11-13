@@ -25,6 +25,8 @@ cars.iml
 /report/*.pdf
 /report/*.toc
 
+# spin
+pan*
 /spin/spin1/
 /spin/spin2/
 /spin/spin3/
