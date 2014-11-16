@@ -11,7 +11,11 @@ The barrier works by having two counters that have to reach the threshold before
 \label{sub:bar-sema}
 We have implemented the barrier using the three primary functions; \code{sync()}, \code{on()}, and \code{off()} as well as an auxiliary function \code{free()}.
 
-The snippet below shows how one of the two counters is implemented in the function \code{sync()}. Obviously, shared variables are enclosed within the \code{mutex.P()}- and \code{mutex.V()}- operations to ensure mutual exclusion.
+The snippet below shows how one of the two counters is implemented in the function \code{sync()}. Obviously, shared variables are enclosed within the statements \code{mutex.P()} and \code{mutex.V()} to ensure mutual exclusion.
+
+If a car arrives, and the counter is below the threshold, it calls \code{barrierIncoming.P()} and waits until it gets signaled X times. When the counter reaches the threshold, \code{barrierIncoming.V()} is called X times.
+
+The same happens for the semaphore \code{barrierLeaving} in the part of the code that has been left out.
 
 \begin{java}
 public void sync() throws Exception {
@@ -43,10 +47,21 @@ public void sync() throws Exception {
 \end{center}
 
 
-The \code{mutex}-semaphore ensures that access to shared variables is with mutual exclusion.
+When turning on the barrier, the function \code{on()} is called, and it simply checks if the barrier is not already enabled, and if it is not, it is turned on, and the counters are set to zero.
 
+Switching off the barrier is a bit more interesting, as the function \code{off()} is as followes (enclosed in a try-catch block and with mutual using the \code{mutex}-semaphore):
 
-TODO!
+\begin{java}
+if (this.active) {
+	this.active = false;
+	this.free(this.incomingCount, BarrierSelector.INCOMING);
+	this.free(this.leavingCount+this.incomingCount, BarrierSelector.LEAVING);
+	this.incomingCount = 0;
+	this.leavingCount = 0;
+}
+\end{java}
+
+When turning off the barrier, the semaphore for the ''arriving`` cars is signaled as many times as arriving cars has been counted - simply to release all of them. If there are any arriving cars, these will then move onto the ''leaving`` section \code{sync()}, and should be accounted for. This is why the semaphore for the leaving cars is signaled (\code{incomingCount} + \code{leavingCount}) times. Finally, the counters are reset.
 
 \subsection{Implementation with a monitor}
 \label{sub:bar-moni}
