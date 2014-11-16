@@ -38,3 +38,4 @@ pan*
 *.d
 *.dot
 *.nvr
+/report/sections/auto/

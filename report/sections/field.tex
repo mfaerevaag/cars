@@ -3,15 +3,37 @@
 %%% TeX-master: "../report"
 %%% End:
 
-TODO!
+The field is implementation of the actual ``board'', where the cars move
+around. To avoid cars colliding together when trying to move to the
+same spot on the board, we use semaphores. In principle, a car waits
+for the next spot it plans to move to. Only first when the car gets
+it, it signals its previous spot's semaphore. This way we can be
+certain that there is no race-conditions or alike when trying to move
+from one spot to another.
 
 
-\subsection{Implementation of the field}
+\subsection{Implementation}
 \label{sub:field-impl}
-TODO!
+A simple way of implementing the field with samaphores would be to
+have a two-dimentional array, with the same sizes as the field, with
+semaphores. This means, one semaphore per spot on the
+board. Therefore, no spot can be occupied by more than one car, which
+makes it impossible for the cars to collide.
 
-TODO: remark on efficiency.
+Although a simple solution, it is not very effiecient. One can imagine
+a solution where there are only as many semaphores in total, as there
+are cars. This, though, causes great challenges when deciding on the
+correct semaphore to wait on. A challange which we have chosen not to
+prioritize in our solution.
+
 
 \subsection{Testing}
 \label{sub:field-test}
-TODO!
+It is fairly simple to test whether collitions occurs. First, turn on
+the ``keep crash'' option in the GUI, to make it easier to see if a
+crash occurs as the spot will be marked with a red dot.
+
+Now, one can simply start all the cars and observe, or run test number
+1. All this test does is to greatly increase the speed of cars 1 and 8
+(one in each direction). This forces them to constantly bump into the
+car infront, as it is traveling much slower.
