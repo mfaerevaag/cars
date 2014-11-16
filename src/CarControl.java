@@ -83,19 +83,24 @@ public class CarControl implements CarControlI {
             return;
         }
 
-        car.remove();
+        // TODO: hacks. if car is waiting in AlleyMonitor, only the wait() is interrupted, not the thread
+        if (car.atAlleyEnterance())
+            car.interrupt();
+
+        car.interrupt();
+
         this.cars[no] = null;
     }
 
     public void restoreCar(int no) {
-        Car car = this.cars[no];
-
-        if (car != null) {
+        if (this.cars[no] != null) {
             cd.println("Car " + no + " not removed");
             return;
         }
 
-        // TODO
+        this.cars[no] = new Car(no, cd, this.gate[no], this.semap, this.alley, this.barrier);
+
+        this.cars[no].start();
     }
 
     /* Speed settings for testing purposes */

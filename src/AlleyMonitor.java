@@ -1,6 +1,6 @@
 public class AlleyMonitor {
 
-    private int upCount, downCount;
+    public int upCount, downCount;
 
     public AlleyMonitor() {
         this.upCount = 0;

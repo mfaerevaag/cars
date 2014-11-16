@@ -22,10 +22,12 @@ public class Car extends Thread {
     int speed;                       // Current car speed
     Pos curpos;                      // Current position
     Pos newpos;                      // New position to go to
+    boolean moving;
 
     public Car(int no, CarDisplayI cd, Gate g, Semaphore[][] semap, AlleyMonitor alley, BarrierMonitor barrier) {
         this.no = no;
         this.cd = cd;
+        this.moving = false;
 
         this.mygate = g;
         this.alley = alley;
@@ -42,14 +44,6 @@ public class Car extends Thread {
             this.variation = 0;
             this.setPriority(Thread.MAX_PRIORITY);
         }
-    }
-
-    public synchronized void remove() {
-        this.interrupt();
-    }
-
-    public synchronized void restore() {
-        // TODO
     }
 
     public synchronized void setSpeed(int speed) {
@@ -85,41 +79,41 @@ public class Car extends Thread {
         return this.semap[pos.col][pos.row];
     }
 
-    Color chooseColor() {
+    public Color chooseColor() {
         // You can get any color, as longs as it's blue
         return Color.blue;
     }
 
-    Pos nextPos(Pos pos) {
+    public Pos nextPos() {
         // Get my track from display
-        return cd.nextPos(no, pos);
+        return cd.nextPos(no, this.curpos);
     }
 
-    boolean atGate(Pos pos) {
-        return pos.equals(startpos);
+    public boolean atGate() {
+        return this.curpos.equals(startpos);
     }
 
-    boolean atBarrier(Pos pos) {
+    public boolean atBarrier() {
         boolean result;
         int col = this.no + 3;
 
         switch (this.no) {
         case 0:
-            result = (pos.col == 3 && pos.row == 4);
+            result = (this.curpos.col == 3 && this.curpos.row == 4);
             break;
 
         case 1:
         case 2:
         case 3:
         case 4:
-            result = (pos.col == col && pos.row == 4);
+            result = (this.curpos.col == col && this.curpos.row == 4);
             break;
 
         case 5:
         case 6:
         case 7:
         case 8:
-            result = (pos.col == col && pos.row == 5);
+            result = (this.curpos.col == col && this.curpos.row == 5);
             break;
 
         default:
@@ -130,7 +124,7 @@ public class Car extends Thread {
         return result;
     }
 
-    boolean atAlleyEnterance(Pos pos) {
+    public boolean atAlleyEnterance() {
         boolean result;
 
         switch (this.no) {
@@ -140,19 +134,19 @@ public class Car extends Thread {
 
             case 1:
             case 2:
-                result = (pos.col == 1 && pos.row == 8);
+                result = (this.curpos.col == 1 && this.curpos.row == 8);
                 break;
 
             case 3:
             case 4:
-                result = (pos.col == 3 && pos.row == 9);
+                result = (this.curpos.col == 3 && this.curpos.row == 9);
                 break;
 
             case 5:
             case 6:
             case 7:
             case 8:
-                result = (pos.col == 0 && pos.row == 0);
+                result = (this.curpos.col == 0 && this.curpos.row == 0);
                 break;
 
             default:
@@ -163,7 +157,37 @@ public class Car extends Thread {
         return result;
     }
 
-    boolean atAlleyExit(Pos pos) {
+    public boolean inAlley() {
+        boolean result;
+
+        if (this.curpos.col == 0 && (0 < this.curpos.row && this.curpos.row < 9))
+            return true;
+
+        switch (this.no) {
+            case 0:
+            case 1:
+            case 2:
+                result = false;
+                break;
+
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+                result = (this.curpos.col < 3 && this.curpos.row == 9);
+                break;
+
+            default:
+                result = false;
+                break;
+        }
+
+        return result;
+    }
+
+    public boolean atAlleyExit() {
         boolean result;
 
         switch (this.no) {
@@ -175,14 +199,14 @@ public class Car extends Thread {
         case 2:
         case 3:
         case 4:
-            result = (pos.col == 1 && pos.row == 1);
+            result = (this.curpos.col == 1 && this.curpos.row == 1);
             break;
 
         case 5:
         case 6:
         case 7:
         case 8:
-            result = (pos.col == 2 && pos.row == 10);
+            result = (this.curpos.col == 2 && this.curpos.row == 10);
             break;
 
         default:
@@ -203,44 +227,64 @@ public class Car extends Thread {
             while (true) {
                 sleep(speed());
 
-                if (atGate(curpos)) {
+                if (atGate()) {
                     mygate.pass();
                     speed = chooseSpeed();
                 }
 
-                newpos = nextPos(curpos);
+                newpos = nextPos();
 
-                if (atAlleyEnterance(curpos)) {
+                if (atAlleyEnterance()) {
                     this.alley.enter(this.no);
                 }
-                else if (atAlleyExit(curpos)) {
+                else if (atAlleyExit()) {
                     this.alley.leave(this.no);
                 }
-                else if (atBarrier(curpos)) {
+                else if (atBarrier()) {
                     this.barrier.sync();
                 }
 
                 this.getSemaphoreFromPos(newpos).P();
+                this.moving = true;
 
                 //  Move to new position
                 cd.clear(curpos);
-                cd.mark(curpos,newpos,col,no);
+                cd.mark(curpos, newpos, col, no);
 
                 //TODO: remove in the end. A means to figure out the coordinate system
                 // Pos testPos = new Pos(4,3);
-                // cd.mark(testPos, Color.cyan,0);
-
+//                if (inAlley())
+//                    cd.mark(curpos, Color.cyan, no);
 
                 sleep(speed());
 
-                cd.clear(curpos,newpos);
-                cd.mark(newpos,col,no);
+                cd.clear(curpos, newpos);
+                cd.mark(newpos, col, no);
+
                 this.getSemaphoreFromPos(curpos).V();
                 curpos = newpos;
+                this.moving = false;
             }
 
         } catch (InterruptedException e) {
             System.out.println("Car no. " + no + " interrupted");
+
+            this.getSemaphoreFromPos(curpos).V();
+            cd.clear(curpos);
+
+            if (curpos != newpos && this.moving) {
+                this.getSemaphoreFromPos(newpos).V();
+                cd.clear(newpos); // TODO: fix yellow spots
+            }
+
+            if (inAlley()) {
+                Direction dir = (no < 5) ? Direction.UP : Direction.DOWN;
+                if (dir == Direction.UP)
+                    this.alley.upCount--;
+                else
+                    this.alley.downCount--;
+            }
+
 
         } catch (Exception e) {
             cd.println("Exception in Car no. " + no);
