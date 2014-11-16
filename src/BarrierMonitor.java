@@ -34,7 +34,9 @@ public class BarrierMonitor {
 
         this.incomingCount++;
 
+        //TODO: remove this statement
         if(this.incomingCount > this.threshold) {
+            System.out.println("ASLDOASKDO");
             this.incomingCount--;
             notifyAll();
         }
@@ -61,7 +63,9 @@ public class BarrierMonitor {
 
         this.leavingCount++;
 
+        //TODO: remove this statement
         if(this.leavingCount > this.threshold) {
+            System.out.println("CXVXCMVNCXMNVCXM");
             this.leavingCount--;
             notifyAll();
         }
@@ -96,11 +100,14 @@ public class BarrierMonitor {
 
 
                 this.mode = BarrierSelector.LEAVING;
-                System.out.println("incC: " + this.incomingCount + ", leaC: " + this.leavingCount);
+                System.out.println("Before stuff: incC: " + this.incomingCount + ", leaC: " + this.leavingCount + ", threshold: " + this.threshold);
 
+                this.leavingCount = -this.incomingCount + k;
                 this.incomingCount = 0;
-                this.leavingCount = -k + 1;
                 this.threshold = k;
+
+
+                System.out.println("After stuff: incC: " + this.incomingCount + ", leaC: " + this.leavingCount + ", threshold: " + this.threshold);
 
                 notifyAll();
 
