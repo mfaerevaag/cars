@@ -19,46 +19,36 @@ public class Barrier {
      * Wait for others to arrive (if barrier active)
      */
     public void sync() throws Exception {
-
         this.mutex.P();
 
         if (this.active) {
-
             // 1st - all cars must arrive ("incoming")
-
             this.incomingCount++;
 
             if (this.incomingCount < this.threshold) { // All cars, except one
                 this.mutex.V();
                 this.barrierIncoming.P();
-
             } else { // Final car needed to start a new round
-                this.free(this.incomingCount - 1, BarrierSelector.INCOMING);
+                this.free(this.incomingCount - 1, BarrierSelector.INCOMING); // calls the relevant barrier-semaphore (leavingCount-1) times
                 this.incomingCount = 0;
                 this.mutex.V();
             }
-
-
             // 2nd - all cars must leave ("leaving")
-
             this.mutex.P();
-
             this.leavingCount++;
 
             if (this.leavingCount < this.threshold) {
                 this.mutex.V();
                 this.barrierLeaving.P();
-
-            }else {
-                this.free(this.leavingCount - 1, BarrierSelector.LEAVING);
+            } else {
+                this.free(this.leavingCount - 1, BarrierSelector.LEAVING); // calls the relevant barrier-semaphore (leavingCount-1) times
                 this.leavingCount = 0;
                 this.mutex.V();
             }
 
-        }else {
+        } else {
             this.mutex.V();
         }
-
     }
 
     /**
@@ -94,7 +84,7 @@ public class Barrier {
 
                 this.active = false;
                 this.free(this.incomingCount, BarrierSelector.INCOMING);
-                this.free(this.leavingCount+this.incomingCount, BarrierSelector.LEAVING); //leavingCount PLUS incomingCount, as the just released incomings will need to pass the leaving barrier
+                this.free(this.leavingCount+this.incomingCount, BarrierSelector.LEAVING); //leavingCount PLUS incomingCount, as the just released incoming cars will need to pass the leaving barrier
                 this.incomingCount = 0;
                 this.leavingCount = 0;
             }

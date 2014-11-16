@@ -17,26 +17,15 @@ public class BarrierMonitor {
 
 
     public synchronized void sync() {
-        //TODO: barrier-mode. Use BarrierSelector
-
         if (!this.active)
             return;
 
         // 1st - all cars must arrive ("incoming")
 
         // Wait until the barrier accepts incoming cars
-        while (this.mode != BarrierSelector.INCOMING) {
-            try {
-                if(!this.active) //Check if barrier is still active when awoken
-                    return;
-                else
-                    wait();
-            }
-            catch (InterruptedException ex) { System.out.println("EXCEPTION"); return; }
-        }
+        this.waitForMode(BarrierSelector.INCOMING);
 
         this.incomingCount++;
-
 
         if(this.incomingCount == this.threshold) {
             this.mode = BarrierSelector.LEAVING;
@@ -47,20 +36,10 @@ public class BarrierMonitor {
 
         // 2nd - all cars must leave ("leaving")
 
-
         // Wait until the barrier accepts leaving cars
-        while (this.mode != BarrierSelector.LEAVING) {
-            try {
-                if(!this.active) //Check if barrier is still active when awoken
-                    return;
-                else
-                    wait();
-            }
-            catch (InterruptedException ex) { System.out.println("EXCEPTION"); return; }
-        }
+        this.waitForMode(BarrierSelector.LEAVING);
 
         this.leavingCount++;
-
 
         if(this.leavingCount == this.threshold) {
             this.mode = BarrierSelector.INCOMING;
@@ -95,15 +74,12 @@ public class BarrierMonitor {
         if (k < this.threshold) {
             if (k <= this.incomingCount) {
 
-
                 this.mode = BarrierSelector.LEAVING;
-                System.out.println("Before stuff: incC: " + this.incomingCount + ", leaC: " + this.leavingCount + ", threshold: " + this.threshold);
 
                 this.leavingCount = - this.incomingCount + k;
                 this.incomingCount = 0;
                 this.threshold = k;
 
-                System.out.println("After stuff: incC: " + this.incomingCount + ", leaC: " + this.leavingCount + ", threshold: " + this.threshold);
 
                 notifyAll();
 
@@ -113,7 +89,7 @@ public class BarrierMonitor {
             // Check if it should release
         } else if (k > this.threshold) {
             this.increaseThreshold = k;
-            System.out.println("Before stuff: incC: " + this.incomingCount + ", leaC: " + this.leavingCount + ", threshold: " + this.threshold);
+
             while (this.mode != BarrierSelector.LEAVING) {
                 try {
                     if(!this.active) { //Check if barrier is still active when awoken
@@ -125,20 +101,22 @@ public class BarrierMonitor {
                 }
                 catch (InterruptedException ex) { return; }
             }
-
-            System.out.println("After stuff: incC: " + this.incomingCount + ", leaC: " + this.leavingCount + ", threshold: " + this.threshold);
-            //TODO: something with waiting!
         }
     }
 
-    public synchronized void printArriving(int carNo) {
-        System.out.println("Car # " + carNo + " arriving at barrier. incC: " + this.incomingCount + ", leaC: " + this.leavingCount);
-    }
 
-    public synchronized void printLeaving(int carNo) {
-        System.out.println("Car # " + carNo + " left barrier. incC: " + this.incomingCount + ", leaC: " + this.leavingCount);
+    private void waitForMode(BarrierSelector selector) {
+        // Wait until the barrier accepts incoming cars
+        while (this.mode != selector) {
+            try {
+                if(!this.active) //Check if barrier is still active when awoken
+                    return;
+                else
+                    wait();
+            }
+            catch (InterruptedException ex) { System.out.println("EXCEPTION"); return; }
+        }
     }
-
 
     /**
      * Activate barrier
