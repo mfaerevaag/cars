@@ -1,14 +1,17 @@
 public class BarrierMonitor {
 
     private boolean active;
-    public int threshold, incomingCount, leavingCount;
+    private int threshold, incomingCount, leavingCount;
     private BarrierSelector mode;
+
+    private int increaseThreshold;
 
     public BarrierMonitor() {
         this.active = false;
         this.threshold = 9;
         this.incomingCount = 0;
         this.leavingCount = 0;
+        this.increaseThreshold = -1;
         this.mode = BarrierSelector.INCOMING;
     }
 
@@ -34,16 +37,11 @@ public class BarrierMonitor {
 
         this.incomingCount++;
 
-        //TODO: remove this statement
-        if(this.incomingCount > this.threshold) {
-            System.out.println("ASLDOASKDO");
-            this.incomingCount--;
-            notifyAll();
-        }
 
         if(this.incomingCount == this.threshold) {
             this.mode = BarrierSelector.LEAVING;
             this.incomingCount = 0;
+
             notifyAll();
         }
 
@@ -63,16 +61,16 @@ public class BarrierMonitor {
 
         this.leavingCount++;
 
-        //TODO: remove this statement
-        if(this.leavingCount > this.threshold) {
-            System.out.println("CXVXCMVNCXMNVCXM");
-            this.leavingCount--;
-            notifyAll();
-        }
 
         if(this.leavingCount == this.threshold) {
             this.mode = BarrierSelector.INCOMING;
             this.leavingCount = 0;
+
+            if(this.increaseThreshold > 1) {
+                this.threshold = this.increaseThreshold;
+                this.increaseThreshold = -1;
+            }
+
             notifyAll();
         }
     }
@@ -83,8 +81,10 @@ public class BarrierMonitor {
         // So we consider it instant.
         while (this.mode == BarrierSelector.LEAVING) {
             try {
-                if(!this.active) //Check if barrier is still active when awoken
+                if(!this.active) {//Check if barrier is still active when awoken
+                    this.threshold = k;
                     return;
+                }
                 else
                     wait();
             }
@@ -92,20 +92,16 @@ public class BarrierMonitor {
         }
 
 
-        if (k > this.threshold) {
-
-            //TODO: something with waiting!
-        } else if (k < this.threshold) {
+        if (k < this.threshold) {
             if (k <= this.incomingCount) {
 
 
                 this.mode = BarrierSelector.LEAVING;
                 System.out.println("Before stuff: incC: " + this.incomingCount + ", leaC: " + this.leavingCount + ", threshold: " + this.threshold);
 
-                this.leavingCount = -this.incomingCount + k;
+                this.leavingCount = - this.incomingCount + k;
                 this.incomingCount = 0;
                 this.threshold = k;
-
 
                 System.out.println("After stuff: incC: " + this.incomingCount + ", leaC: " + this.leavingCount + ", threshold: " + this.threshold);
 
@@ -115,6 +111,23 @@ public class BarrierMonitor {
                 this.threshold = k;
             }
             // Check if it should release
+        } else if (k > this.threshold) {
+            this.increaseThreshold = k;
+            System.out.println("Before stuff: incC: " + this.incomingCount + ", leaC: " + this.leavingCount + ", threshold: " + this.threshold);
+            while (this.mode != BarrierSelector.LEAVING) {
+                try {
+                    if(!this.active) { //Check if barrier is still active when awoken
+                        this.threshold = k;
+                        return;
+                    }
+                    else
+                        wait();
+                }
+                catch (InterruptedException ex) { return; }
+            }
+
+            System.out.println("After stuff: incC: " + this.incomingCount + ", leaC: " + this.leavingCount + ", threshold: " + this.threshold);
+            //TODO: something with waiting!
         }
     }
 
@@ -131,9 +144,12 @@ public class BarrierMonitor {
      * Activate barrier
      */
     public synchronized void on() {
-        this.active = true;
-        this.incomingCount = 0;
-        this.leavingCount = 0;
+        if (! this.active) {
+            this.active = true;
+            this.incomingCount = 0;
+            this.leavingCount = 0;
+            this.increaseThreshold = -1;
+        }
     }
 
     /**
@@ -141,10 +157,11 @@ public class BarrierMonitor {
      */
     public synchronized void off() {
         this.active = false;
-        this.notifyAll();
         this.leavingCount = 0;
         this.incomingCount = 0;
         this.mode = BarrierSelector.INCOMING;
+        this.increaseThreshold = -1;
+        this.notifyAll();
     }
 
 
