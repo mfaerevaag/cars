@@ -3,10 +3,49 @@
 %%% TeX-master: "../report"
 %%% End:
 
-TODO!
+
+The barrier works by having two counters that have to reach the threshold before the cars are released from it. Having only one such counter, one car could rush to the barrier before all of the other cars were even released. But by implementing two, that have to reach their threshold before releasing all their cars, rushing ahead to the same point, and thus stealing a ''release-token`` from one of the other cars, is impossible.
+
 
 \subsection{Implementation with semaphores}
 \label{sub:bar-sema}
+We have implemented the barrier using the three primary functions; \code{sync()}, \code{on()}, and \code{off()} as well as an auxiliary function \code{free()}.
+
+The snippet below shows how one of the two counters is implemented in the function \code{sync()}. Obviously, shared variables are enclosed within the \code{mutex.P()}- and \code{mutex.V()}- operations to ensure mutual exclusion.
+
+\begin{java}
+public void sync() throws Exception {
+	this.mutex.P();
+
+	if (this.active) {
+		// 1st - all cars must arrive ("incoming")
+		this.incomingCount++;
+
+		if (this.incomingCount < this.threshold) { // All cars, except one
+			this.mutex.V();
+			this.barrierIncoming.P();
+		} else { // Final car needed to start a new round
+			this.free(this.incomingCount - 1, BarrierSelector.INCOMING);
+			// signals the relevant barrier-semaphore (leavingCount-1) times
+			this.incomingCount = 0;
+			this.mutex.V();
+		}
+		// 2nd - all cars must leave ("leaving")
+		// NB: PART LEFT OUT (This part is quite symmetrical to the first part)
+		// Please see appendices for the full code*
+
+	} else 
+		this.mutex.V();
+}
+\end{java}
+\begin{center}
+* More specifically, section \ref{sub:app-barr-sync}
+\end{center}
+
+
+The \code{mutex}-semaphore ensures that access to shared variables is with mutual exclusion.
+
+
 TODO!
 
 \subsection{Implementation with a monitor}
