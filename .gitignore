@@ -19,11 +19,12 @@ cars.iml
 
 # latex
 /report/auto/
-/report/*.aux
-/report/*.log
-/report/*.out
-/report/*.pdf
-/report/*.toc
+*.aux
+*.log
+*.out
+*.pdf
+*.toc
+report/report.synctex.gz
 
 # spin
 pan*
@@ -32,3 +33,8 @@ pan*
 /spin/spin2/
 /spin/spin3/
 /spin/spin4/
+*.spd
+*.chk
+*.d
+*.dot
+*.nvr
