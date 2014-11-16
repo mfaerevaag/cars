@@ -1,10 +1,8 @@
 public class BarrierMonitor {
 
     private boolean active;
-    private int threshold, incomingCount, leavingCount;
+    public int threshold, incomingCount, leavingCount;
     private BarrierSelector mode;
-
-    private Semaphore barrierIncoming, barrierLeaving, mutex;
 
     public BarrierMonitor() {
         this.active = false;
@@ -12,10 +10,6 @@ public class BarrierMonitor {
         this.incomingCount = 0;
         this.leavingCount = 0;
         this.mode = BarrierSelector.INCOMING;
-
-        this.barrierIncoming = new Semaphore(0);
-        this.barrierLeaving = new Semaphore(0);
-        this.mutex = new Semaphore(1);
     }
 
 
@@ -35,10 +29,15 @@ public class BarrierMonitor {
                 else
                     wait();
             }
-            catch (InterruptedException ex) { return; }
+            catch (InterruptedException ex) { System.out.println("EXCEPTION"); return; }
         }
 
         this.incomingCount++;
+
+        if(this.incomingCount > this.threshold) {
+            this.incomingCount--;
+            notifyAll();
+        }
 
         if(this.incomingCount == this.threshold) {
             this.mode = BarrierSelector.LEAVING;
@@ -57,10 +56,15 @@ public class BarrierMonitor {
                 else
                     wait();
             }
-            catch (InterruptedException ex) { return; }
+            catch (InterruptedException ex) { System.out.println("EXCEPTION"); return; }
         }
 
         this.leavingCount++;
+
+        if(this.leavingCount > this.threshold) {
+            this.leavingCount--;
+            notifyAll();
+        }
 
         if(this.leavingCount == this.threshold) {
             this.mode = BarrierSelector.INCOMING;
@@ -69,27 +73,60 @@ public class BarrierMonitor {
         }
     }
 
+    public synchronized void setThreshold(int k) {
+        // Waiting for all cars "flagged" for leaving.
+        // This is always in the order of milliseconds, as cars cannot be sleeping in this period.
+        // So we consider it instant.
+        while (this.mode == BarrierSelector.LEAVING) {
+            try {
+                if(!this.active) //Check if barrier is still active when awoken
+                    return;
+                else
+                    wait();
+            }
+            catch (InterruptedException ex) { return; }
+        }
+
+
+        if (k > this.threshold) {
+
+            //TODO: something with waiting!
+        } else if (k < this.threshold) {
+            if (k <= this.incomingCount) {
+
+
+                this.mode = BarrierSelector.LEAVING;
+                System.out.println("incC: " + this.incomingCount + ", leaC: " + this.leavingCount);
+
+                this.incomingCount = 0;
+                this.leavingCount = -k + 1;
+                this.threshold = k;
+
+                notifyAll();
+
+            }else {
+                this.threshold = k;
+            }
+            // Check if it should release
+        }
+    }
+
+    public synchronized void printArriving(int carNo) {
+        System.out.println("Car # " + carNo + " arriving at barrier. incC: " + this.incomingCount + ", leaC: " + this.leavingCount);
+    }
+
+    public synchronized void printLeaving(int carNo) {
+        System.out.println("Car # " + carNo + " left barrier. incC: " + this.incomingCount + ", leaC: " + this.leavingCount);
+    }
+
 
     /**
      * Activate barrier
      */
     public synchronized void on() {
         this.active = true;
-//        try {
-//            this.mutex.P();
-//
-//            if (!this.active) {
-//                this.active = true;
-//
-//                this.incomingCount = 0;
-//                this.leavingCount = 0;
-//            }
-//
-//            this.mutex.V();
-//
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        this.incomingCount = 0;
+        this.leavingCount = 0;
     }
 
     /**
@@ -101,21 +138,6 @@ public class BarrierMonitor {
         this.leavingCount = 0;
         this.incomingCount = 0;
         this.mode = BarrierSelector.INCOMING;
-//        try {
-//            this.mutex.P();
-//            if (this.active) {
-//
-//                this.active = false;
-//                this.free(this.incomingCount, BarrierSelector.INCOMING);
-//                this.free(this.leavingCount+this.incomingCount, BarrierSelector.LEAVING); //leavingCount PLUS incomingCount, as the just released incomings will need to pass the leaving barrier
-//                this.incomingCount = 0;
-//                this.leavingCount = 0;
-//            }
-//            this.mutex.V();
-//
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
     }
 
 
