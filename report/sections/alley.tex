@@ -3,14 +3,23 @@
 %%% TeX-master: "../report"
 %%% End:
 
-TODO!
+The alley is the narrow path on the left side of the board, where
+there can fit no more than one car side-by-side. As we have solved
+there challenge with collision, if two cars was to go into the alley,
+one from each side, they would create a deadlock as neither one of
+them can drive through the other. To solve this we need a way of
+telling if there are already cars in the alley, traveling the opposite
+direction. If that is the case, then the car should wait until the
+alley is free of cars, and then drive in. Of course, the cars waiting
+for the alley to become free must wait in a spot where they are not
+blocking the cars coming out in the opposite direction.
 
 
-\subsection{Implementation with semaphores}
+\subsection{Semaphore implementation}
 \label{sub:all-sema}
 TODO!
 
-\subsection{Implementation with a monitor}
+\subsection{Monitor implementation}
 \label{sub:all-moni}
 TODO!
 
@@ -20,6 +29,9 @@ TODO!
 
 \subsection{Testing}
 \label{sub:all-test}
-As our proof in Promela only verifies that no cars driving the opposite direction of those already in the alley can enter, they might still attempt.
+As our proof in Promela only verifies that no cars driving the
+opposite direction of those already in the alley can enter, they might
+still attempt.
 
-TODO: make a test that shows that cars stop and wait for the cars driving in the opposite direction...
+This can visually be tested by running any test, as they all drive through
+the alley, or simply by starting all the cars.
