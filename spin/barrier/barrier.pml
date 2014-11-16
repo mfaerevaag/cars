@@ -1,5 +1,4 @@
-#define ncars		4
-
+#define ncars		2
 
 //The semaphores
 short mutex 			= 1;
@@ -12,7 +11,26 @@ short leaving_count 		= 0;
 short threshold		= ncars;
 
 // Testing
-short max_rounds 		= 0;
+short car_rounds[ncars];
+
+inline zero_round_counts() {
+	
+	short car_index = 0;
+
+	do
+	:: 	car_rounds[car_index] = 0;
+		car_index++;
+		if
+		:: (car_index >= ncars) -> break;
+		:: else -> skip;
+		fi;
+	od;
+}
+
+// Initialize 
+init {
+	zero_round_counts();
+}
 
 inline V_mutex() {	mutex++;	}
 inline P_mutex() {
@@ -39,39 +57,64 @@ inline P_leaving() {
 }
 
 
-inline sync() {
-	P_mutex();
+inline sync(proof_car_no) {
+// proof_car_no is only used for proving the correctness
 
+	P_mutex();
 
 
 	// 1st - all cars must arrive ("incoming")
 	incoming_count++;
 
+	// This point is regarded as the end of a round
+	car_rounds[proof_car_no]++;
+
 	if
 	:: (incoming_count < threshold) ->
 		V_mutex();
 		P_incoming();
-	:: else	->
+	:: (incoming_count == threshold)	->
+
+				// When the final car leaves for a new round, 
+		// all cars should have a round_count of 1	
+atomic {
+		assert(incoming_count == 2);
+		assert(leaving_count == 0);
+		assert(car_rounds[0] == 1);
+		if
+		:: (car_rounds[1] != 1) -> assert(car_rounds[1] == 1);
+		:: else -> assert(car_rounds[1] == 1);
+		fi;
+		car_rounds[0] = 0;
+		car_rounds[1] = 0;
+}
+
 		free_incoming(incoming_count - 1);
 		incoming_count = 0;
+
 		V_mutex();
+	:: else -> assert(false);
 	fi;
-	
 
 
 	// 2nd - all cars must leave ("leaving")
 
 	P_mutex();
+
             	leaving_count++;
+
 
 	if 
 	:: leaving_count < threshold ->
 		V_mutex();
 		P_leaving();
-	:: else ->
+	:: (leaving_count == threshold) ->
+		
 		free_leaving(leaving_count - 1);
 		leaving_count = 0;
+		
 		V_mutex();
+	:: else -> assert(false);
 	fi;
 
 
@@ -102,37 +145,13 @@ inline count_round() {
 	}
 }
 
-active [ncars] proctype car_up(){
-	short round_count = 0;
+active [ncars] proctype car(){
+// _pid is the id of the process - which is equivalent to the id of the car!
+assert(_pid >= 1 && _pid <= ncars);
 
-	sync();
-	count_round();
-	assert ( round_count == max_rounds);
-	assert(max_rounds == 1);
-	assert(round_count == 1);
-
-
-	sync();
-	count_round();
-	assert ( round_count == max_rounds);
-	assert(max_rounds == 2);
-	assert(round_count == 2);
-
-
-	sync();
-	count_round();
-	assert ( round_count == max_rounds);
-	assert(max_rounds == 3);
-	assert(round_count == 3);
-
-
-
-	sync();
-	count_round();
-	assert ( round_count == max_rounds);
-	assert(max_rounds == 4);
-	assert(round_count == 4);
-
+	do ::
+		sync(_pid - 1);  //_pid is in the range [1;ncars]
+	od;
 
 }
 
