@@ -1,7 +1,3 @@
-enum BarrierSelector {
-    INCOMING, LEAVING
-}
-
 public class Barrier {
 
     private boolean active;
