@@ -32,11 +32,11 @@ public class CarControl implements CarControlI {
 
         for (int no = 0; no < 9; no++) {
             this.gate[no] = new Gate();
-            this.cars[no] = new Car(no,cd,gate[no], this.semap, this.alley, this.barrier);
+            this.cars[no] = new Car(no, cd, gate[no], this.semap, this.alley, this.barrier);
             this.cars[no].start();
 
             // Used to occupy the spot where the car is spawned
-            Pos startPos = this.cars[no].startpos;
+            Pos startPos = this.cars[no].getStartPos();
             this.semap[startPos.col][startPos.row] = new Semaphore(0);
         }
 
@@ -78,10 +78,6 @@ public class CarControl implements CarControlI {
             cd.println("Car " + no + " already removed");
             return;
         }
-
-        // TODO: hacks. if car is waiting in AlleyMonitor, only the wait() is interrupted, not the thread
-        if (car.atAlleyEnterance())
-            car.interrupt();
 
         car.interrupt();
 

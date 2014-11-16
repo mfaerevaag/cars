@@ -1,59 +1,82 @@
 import java.awt.Color;
-import java.io.InterruptedIOException;
 
 public class Car extends Thread {
 
-    int basespeed = 100;             // Rather: degree of slowness
-    int variation =  50;             // Percentage of base speed
+    private int baseSpeed = 100;     // Degree of slowness
+    private int variation =  50;     // Percentage of base speed
 
-    CarDisplayI cd;                  // GUI part
+    private int no;                  // Car number
+    private Gate gate;               // Gate at startposition
+    private Semaphore[][] semaMap;   // The entire map as semaphores
 
-    int no;                          // Car number
-    Pos startpos;                    // Startpositon (provided by GUI)
-    Pos barpos;                      // Barrierpositon (provided by GUI)
-    Color col;                       // Car  color
-    Gate mygate;                     // Gate at startposition
-//    Alley alley;
-    AlleyMonitor alley;
-//    Barrier barrier;
-    BarrierMonitor barrier;
-    Semaphore[][] semap; // The entire map as semaphores
+    /*
+    Below you can choose between using semaphores og monitors.
+    Remember to change constructor as well.
+     */
+    // private Alley alley;
+    private AlleyMonitor alley;
+    // private Barrier barrier;
+    private BarrierMonitor barrier;
 
-    int speed;                       // Current car speed
-    Pos curpos;                      // Current position
-    Pos newpos;                      // New position to go to
-    boolean moving;
+    private Pos startPos;            // Start position (provided by GUI)
+    private Pos barPos;              // Barrier position (provided by GUI)
+    private Color col;               // Car color
+    private int speed;               // Current car speed
+    private Pos curPos;              // Current position
+    private Pos newPos;              // New position to go to
+    private boolean moving;          // TODO: car maintenance wip
 
-    public Car(int no, CarDisplayI cd, Gate g, Semaphore[][] semap, AlleyMonitor alley, BarrierMonitor barrier) {
+    private CarDisplayI cd;          // GUI part
+
+    /**
+     * Car constructor
+     *
+     * @param no - Car number
+     * @param cd - Car Display
+     * @param gate - Car's start gate
+     * @param semaMap -  Car Controller's map of Seamphores
+     * @param alley - Car Controller's Alley
+     * @param barrier -  Car Controller's Alley
+     */
+    public Car(int no, CarDisplayI cd, Gate gate, Semaphore[][] semaMap, AlleyMonitor alley, BarrierMonitor barrier) {
         this.no = no;
         this.cd = cd;
         this.moving = false;
 
-        this.mygate = g;
+        this.gate = gate;
+        this.semaMap = semaMap;
         this.alley = alley;
         this.barrier = barrier;
-        this.semap = semap;
-        this.startpos = cd.getStartPos(no);
-        this.barpos = cd.getBarrierPos(no);  // For later use
+
+        this.startPos = cd.getStartPos(no);
+        this.barPos = cd.getBarrierPos(no);  // For later use
 
         this.col = chooseColor();
 
         // do not change the special settings for car no. 0
         if (no == 0) {
-            this.basespeed = 0;
+            this.baseSpeed = 0;
             this.variation = 0;
             this.setPriority(Thread.MAX_PRIORITY);
         }
     }
 
+    /**
+     * Set speed of car (synchronized)
+     * @param speed
+     */
     public synchronized void setSpeed(int speed) {
         // not modify car no 0 or set negative speed
         if (this.no != 0 && this.speed >= 0)
-            basespeed = speed;
+            baseSpeed = speed;
         else
             cd.println("Illegal speed settings");
     }
 
+    /**
+     * Set variation of car's speed (synchronized)
+     * @param var
+     */
     public synchronized void setVariation(int var) {
         // not modify car no 0 and 0 <= var <= 100
         if (no != 0 && 0 <= var && var <= 100)
@@ -62,91 +85,140 @@ public class Car extends Thread {
             cd.println("Illegal variation settings");
     }
 
-    synchronized int chooseSpeed() {
-        double factor = (1.0D+(Math.random()-0.5D)*2*variation/100);
+    /**
+     * Run car
+     */
+    public void run() {
+        try {
+            speed = chooseSpeed();
+            curPos = startPos;
+            cd.mark(curPos,col,no);
 
-        return (int) Math.round(factor * basespeed);
+            while (true) {
+                sleep(getSpeed());
+
+                if (atGate()) {
+                    gate.pass();
+                    speed = chooseSpeed();
+                }
+
+                newPos = nextPos();
+
+                if (atAlleyEnterance()) {
+                    this.alley.enter(this.no);
+                }
+                else if (atAlleyExit()) {
+                    this.alley.leave(this.no);
+                }
+                else if (atBarrier()) {
+                    this.barrier.sync();
+                }
+
+                this.getSemaphoreFromPos(newPos).P();
+                this.moving = true;
+
+                //  Move to new position
+                cd.clear(curPos);
+                cd.mark(curPos, newPos, col, no);
+
+                //TODO: remove in the end. A means to figure out the coordinate system
+                // Pos testPos = new Pos(4,3);
+                // if (inAlley())
+                //     cd.mark(curPos, Color.cyan, no);
+
+                sleep(getSpeed());
+
+                cd.clear(curPos, newPos);
+                cd.mark(newPos, col, no);
+
+                this.getSemaphoreFromPos(curPos).V();
+                curPos = newPos;
+                this.moving = false;
+            }
+
+        } catch (InterruptedException e) {
+            System.out.println("Car no. " + no + " interrupted");
+
+            this.getSemaphoreFromPos(curPos).V();
+            cd.clear(curPos);
+
+            if (curPos != newPos && this.moving) {
+                this.getSemaphoreFromPos(newPos).V();
+                cd.clear(newPos); // TODO: fix yellow spots
+            }
+
+            if (inAlley()) {
+                AlleyDirection dir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
+                if (dir == AlleyDirection.UP)
+                    this.alley.decrementUpCount();
+                else
+                    this.alley.decrementDownCount();
+            }
+
+
+        } catch (Exception e) {
+            cd.println("Exception in Car no. " + no);
+            System.err.println("Exception in Car no. " + no + ":" + e);
+            e.printStackTrace();
+        }
     }
 
-    private int speed() {
+    /*
+    Utility method used by class it self
+     */
+
+    private Semaphore getSemaphoreFromPos(Pos pos) {
+        return this.semaMap[pos.col][pos.row];
+    }
+
+    private int getSpeed() {
         // Slow down if requested
         final int slowfactor = 3;
 
-        return speed * (cd.isSlow(this.curpos) ? slowfactor : 1);
+        return speed * (cd.isSlow(this.curPos) ? slowfactor : 1);
     }
 
-    private Semaphore getSemaphoreFromPos(Pos pos) {
-        return this.semap[pos.col][pos.row];
+    private synchronized int chooseSpeed() {
+        double factor = (1.0D+(Math.random()-0.5D)*2*variation/100);
+
+        return (int) Math.round(factor * baseSpeed);
     }
 
-    public Color chooseColor() {
+    private Pos nextPos() {
+        // Get my track from display
+        return cd.nextPos(this.no, this.curPos);
+    }
+
+    private Color chooseColor() {
         // You can get any color, as longs as it's blue
         return Color.blue;
     }
 
-    public Pos nextPos() {
-        // Get my track from display
-        return cd.nextPos(no, this.curpos);
+    private boolean atGate() {
+        return this.curPos.equals(this.startPos);
     }
 
-    public boolean atGate() {
-        return this.curpos.equals(startpos);
-    }
-
-    public boolean atBarrier() {
+    private boolean atBarrier() {
         boolean result;
         int col = this.no + 3;
 
         switch (this.no) {
-        case 0:
-            result = (this.curpos.col == 3 && this.curpos.row == 4);
-            break;
-
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-            result = (this.curpos.col == col && this.curpos.row == 4);
-            break;
-
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-            result = (this.curpos.col == col && this.curpos.row == 5);
-            break;
-
-        default:
-            result = false;
-            break;
-        }
-
-        return result;
-    }
-
-    public boolean atAlleyEnterance() {
-        boolean result;
-
-        switch (this.no) {
             case 0:
-                result = false;
+                result = (this.curPos.col == 3 && this.curPos.row == 4);
                 break;
 
             case 1:
             case 2:
-                result = (this.curpos.col == 1 && this.curpos.row == 8);
-                break;
-
             case 3:
             case 4:
-                result = (this.curpos.col == 3 && this.curpos.row == 9);
+                result = (this.curPos.col == col && this.curPos.row == 4);
                 break;
 
             case 5:
             case 6:
             case 7:
             case 8:
-                result = (this.curpos.col == 0 && this.curpos.row == 0);
+                result = (this.curPos.col == col && this.curPos.row == 5);
                 break;
 
             default:
@@ -157,10 +229,43 @@ public class Car extends Thread {
         return result;
     }
 
-    public boolean inAlley() {
+    private boolean atAlleyEnterance() {
         boolean result;
 
-        if (this.curpos.col == 0 && (0 < this.curpos.row && this.curpos.row < 9))
+        switch (this.no) {
+            case 0:
+                result = false;
+                break;
+
+            case 1:
+            case 2:
+                result = (this.curPos.col == 1 && this.curPos.row == 8);
+                break;
+
+            case 3:
+            case 4:
+                result = (this.curPos.col == 3 && this.curPos.row == 9);
+                break;
+
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+                result = (this.curPos.col == 0 && this.curPos.row == 0);
+                break;
+
+            default:
+                result = false;
+                break;
+        }
+
+        return result;
+    }
+
+    private boolean inAlley() {
+        boolean result;
+
+        if (this.curPos.col == 0 && (0 < this.curPos.row && this.curPos.row < 9))
             return true;
 
         switch (this.no) {
@@ -176,7 +281,7 @@ public class Car extends Thread {
             case 6:
             case 7:
             case 8:
-                result = (this.curpos.col < 3 && this.curpos.row == 9);
+                result = (this.curPos.col < 3 && this.curPos.row == 9);
                 break;
 
             default:
@@ -187,110 +292,41 @@ public class Car extends Thread {
         return result;
     }
 
-    public boolean atAlleyExit() {
+    private boolean atAlleyExit() {
         boolean result;
 
         switch (this.no) {
-        case 0:
-            result = false;
-            break;
+            case 0:
+                result = false;
+                break;
 
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-            result = (this.curpos.col == 1 && this.curpos.row == 1);
-            break;
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+                result = (this.curPos.col == 1 && this.curPos.row == 1);
+                break;
 
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-            result = (this.curpos.col == 2 && this.curpos.row == 10);
-            break;
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+                result = (this.curPos.col == 2 && this.curPos.row == 10);
+                break;
 
-        default:
-            result = false;
-            break;
+            default:
+                result = false;
+                break;
         }
 
         return result;
     }
 
-    public void run() {
-        try {
+    /*
+    Getters and setters
+     */
 
-            speed = chooseSpeed();
-            curpos = startpos;
-            cd.mark(curpos,col,no);
-
-            while (true) {
-                sleep(speed());
-
-                if (atGate()) {
-                    mygate.pass();
-                    speed = chooseSpeed();
-                }
-
-                newpos = nextPos();
-
-                if (atAlleyEnterance()) {
-                    this.alley.enter(this.no);
-                }
-                else if (atAlleyExit()) {
-                    this.alley.leave(this.no);
-                }
-                else if (atBarrier()) {
-                    this.barrier.sync();
-                }
-
-                this.getSemaphoreFromPos(newpos).P();
-                this.moving = true;
-
-                //  Move to new position
-                cd.clear(curpos);
-                cd.mark(curpos, newpos, col, no);
-
-                //TODO: remove in the end. A means to figure out the coordinate system
-                // Pos testPos = new Pos(4,3);
-//                if (inAlley())
-//                    cd.mark(curpos, Color.cyan, no);
-
-                sleep(speed());
-
-                cd.clear(curpos, newpos);
-                cd.mark(newpos, col, no);
-
-                this.getSemaphoreFromPos(curpos).V();
-                curpos = newpos;
-                this.moving = false;
-            }
-
-        } catch (InterruptedException e) {
-            System.out.println("Car no. " + no + " interrupted");
-
-            this.getSemaphoreFromPos(curpos).V();
-            cd.clear(curpos);
-
-            if (curpos != newpos && this.moving) {
-                this.getSemaphoreFromPos(newpos).V();
-                cd.clear(newpos); // TODO: fix yellow spots
-            }
-
-            if (inAlley()) {
-                Direction dir = (no < 5) ? Direction.UP : Direction.DOWN;
-                if (dir == Direction.UP)
-                    this.alley.upCount--;
-                else
-                    this.alley.downCount--;
-            }
-
-
-        } catch (Exception e) {
-            cd.println("Exception in Car no. " + no);
-            System.err.println("Exception in Car no. " + no + ":" + e);
-            e.printStackTrace();
-        }
+    public Pos getStartPos() {
+        return startPos;
     }
-
 }

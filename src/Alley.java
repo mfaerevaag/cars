@@ -1,7 +1,3 @@
-enum Direction {
-    UP, DOWN
-}
-
 public class Alley {
 
     private int upCount, downCount;
@@ -17,9 +13,9 @@ public class Alley {
 
     // Heavily inspired by the book p. 170
     public void enter(int no) throws InterruptedException {
-        Direction newDir = (no < 5) ? Direction.UP : Direction.DOWN;
+        AlleyDirection newDir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
 
-        if (newDir == Direction.UP) {
+        if (newDir == AlleyDirection.UP) {
             this.mutexUp.P();
 
             this.upCount++;
@@ -40,9 +36,9 @@ public class Alley {
     }
 
     public void leave(int no) throws InterruptedException{
-        Direction newDir = (no < 5) ? Direction.UP : Direction.DOWN;
+        AlleyDirection newDir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
 
-        if (newDir == Direction.UP) {
+        if (newDir == AlleyDirection.UP) {
             this.mutexUp.P();
 
             this.upCount--;
