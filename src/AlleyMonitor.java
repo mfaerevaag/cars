@@ -7,21 +7,19 @@ public class AlleyMonitor {
         this.downCount = 0;
     }
 
-    public synchronized void enter(int carNo) {
+    public synchronized void enter(int carNo) throws InterruptedException /**/{
         AlleyDirection dir = (carNo < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
 
         if (dir == AlleyDirection.UP) {
             // Wait while there are cars going the opposite direction.
             while (this.downCount > 0) {
-                try { wait(); }
-                catch (InterruptedException ex) { return; }
+                wait();
             }
 
             this.upCount++;
         } else {
             while (this.upCount > 0) {
-                try { wait(); }
-                catch (InterruptedException ex) { return; }
+                wait();
             }
 
             this.downCount++;
@@ -44,13 +42,5 @@ public class AlleyMonitor {
             if (this.downCount == 0)
                 notifyAll();
         }
-    }
-
-    public void decrementUpCount() {
-        this.upCount--;
-    }
-
-    public void decrementDownCount() {
-        this.downCount--;
     }
 }

@@ -10,9 +10,9 @@ public class Car extends Thread {
     private Semaphore[][] semaMap;   // The entire map as semaphores
 
     /*
-    Below you can choose between using semaphores og monitors.
-    Remember to change constructor as well.
-     */
+      Below you can choose between using semaphores og monitors.
+      Remember to change constructor as well.
+    */
     // private Alley alley;
     private AlleyMonitor alley;
     // private Barrier barrier;
@@ -23,8 +23,7 @@ public class Car extends Thread {
     private Color col;               // Car color
     private int speed;               // Current car speed
     private Pos curPos;              // Current position
-    private Pos newPos;              // New position to go to
-    private boolean moving;          // TODO: car maintenance wip
+    private Pos newPos;              // New position to go
 
     private CarDisplayI cd;          // GUI part
 
@@ -41,7 +40,6 @@ public class Car extends Thread {
     public Car(int no, CarDisplayI cd, Gate gate, Semaphore[][] semaMap, AlleyMonitor alley, BarrierMonitor barrier) {
         this.no = no;
         this.cd = cd;
-        this.moving = false;
 
         this.gate = gate;
         this.semaMap = semaMap;
@@ -89,12 +87,12 @@ public class Car extends Thread {
      * Run car
      */
     public void run() {
-        try {
-            speed = chooseSpeed();
-            curPos = startPos;
-            cd.mark(curPos,col,no);
+        speed = chooseSpeed();
+        curPos = startPos;
+        cd.mark(curPos, col, no);
 
-            while (true) {
+        while (true) {
+            try {
                 sleep(getSpeed());
 
                 if (atGate()) {
@@ -106,25 +104,22 @@ public class Car extends Thread {
 
                 if (atAlleyEnterance()) {
                     this.alley.enter(this.no);
-                }
-                else if (atAlleyExit()) {
+                } else if (atAlleyExit()) {
                     this.alley.leave(this.no);
-                }
-                else if (atBarrier()) {
+                } else if (atBarrier()) {
                     this.barrier.sync();
                 }
 
+            } catch (InterruptedException e) {
+                this.repair(false);
+            }
+
+            try {
                 this.getSemaphoreFromPos(newPos).P();
-                this.moving = true;
 
                 //  Move to new position
                 cd.clear(curPos);
                 cd.mark(curPos, newPos, col, no);
-
-                //TODO: remove in the end. A means to figure out the coordinate system
-                // Pos testPos = new Pos(4,3);
-                // if (inAlley())
-                //     cd.mark(curPos, Color.cyan, no);
 
                 sleep(getSpeed());
 
@@ -133,39 +128,39 @@ public class Car extends Thread {
 
                 this.getSemaphoreFromPos(curPos).V();
                 curPos = newPos;
-                this.moving = false;
-            }
 
+            } catch (InterruptedException e) {
+                this.repair(curPos != newPos);
+            }
+        }
+
+    }
+
+    /*
+      Utility method used by class it self
+    */
+
+    private void repair(boolean clearNewPos) {
+        this.getSemaphoreFromPos(curPos).V();
+        cd.clear(curPos);
+
+        if (clearNewPos) {
+            this.getSemaphoreFromPos(newPos).V();
+            cd.clear(newPos);
+        }
+
+        if (inAlley()) {
+            this.alley.leave(this.no);
+        }
+
+        try {
+            this.join();
         } catch (InterruptedException e) {
-            System.out.println("Car no. " + no + " interrupted");
-
-            this.getSemaphoreFromPos(curPos).V();
-            cd.clear(curPos);
-
-            if (curPos != newPos && this.moving) {
-                this.getSemaphoreFromPos(newPos).V();
-                cd.clear(newPos); // TODO: fix yellow spots
-            }
-
-            if (inAlley()) {
-                AlleyDirection dir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
-                if (dir == AlleyDirection.UP)
-                    this.alley.decrementUpCount();
-                else
-                    this.alley.decrementDownCount();
-            }
-
-
-        } catch (Exception e) {
             cd.println("Exception in Car no. " + no);
             System.err.println("Exception in Car no. " + no + ":" + e);
             e.printStackTrace();
         }
     }
-
-    /*
-    Utility method used by class it self
-     */
 
     private Semaphore getSemaphoreFromPos(Pos pos) {
         return this.semaMap[pos.col][pos.row];
@@ -203,27 +198,27 @@ public class Car extends Thread {
         int col = this.no + 3;
 
         switch (this.no) {
-            case 0:
-                result = (this.curPos.col == 3 && this.curPos.row == 4);
-                break;
+        case 0:
+            result = (this.curPos.col == 3 && this.curPos.row == 4);
+            break;
 
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-                result = (this.curPos.col == col && this.curPos.row == 4);
-                break;
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            result = (this.curPos.col == col && this.curPos.row == 4);
+            break;
 
-            case 5:
-            case 6:
-            case 7:
-            case 8:
-                result = (this.curPos.col == col && this.curPos.row == 5);
-                break;
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+            result = (this.curPos.col == col && this.curPos.row == 5);
+            break;
 
-            default:
-                result = false;
-                break;
+        default:
+            result = false;
+            break;
         }
 
         return result;
@@ -233,30 +228,30 @@ public class Car extends Thread {
         boolean result;
 
         switch (this.no) {
-            case 0:
-                result = false;
-                break;
+        case 0:
+            result = false;
+            break;
 
-            case 1:
-            case 2:
-                result = (this.curPos.col == 1 && this.curPos.row == 8);
-                break;
+        case 1:
+        case 2:
+            result = (this.curPos.col == 1 && this.curPos.row == 8);
+            break;
 
-            case 3:
-            case 4:
-                result = (this.curPos.col == 3 && this.curPos.row == 9);
-                break;
+        case 3:
+        case 4:
+            result = (this.curPos.col == 3 && this.curPos.row == 9);
+            break;
 
-            case 5:
-            case 6:
-            case 7:
-            case 8:
-                result = (this.curPos.col == 0 && this.curPos.row == 0);
-                break;
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+            result = (this.curPos.col == 0 && this.curPos.row == 0);
+            break;
 
-            default:
-                result = false;
-                break;
+        default:
+            result = false;
+            break;
         }
 
         return result;
@@ -269,24 +264,24 @@ public class Car extends Thread {
             return true;
 
         switch (this.no) {
-            case 0:
-            case 1:
-            case 2:
-                result = false;
-                break;
+        case 0:
+        case 1:
+        case 2:
+            result = false;
+            break;
 
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-            case 8:
-                result = (this.curPos.col < 3 && this.curPos.row == 9);
-                break;
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+            result = (this.curPos.col < 3 && this.curPos.row == 9);
+            break;
 
-            default:
-                result = false;
-                break;
+        default:
+            result = false;
+            break;
         }
 
         return result;
@@ -296,35 +291,35 @@ public class Car extends Thread {
         boolean result;
 
         switch (this.no) {
-            case 0:
-                result = false;
-                break;
+        case 0:
+            result = false;
+            break;
 
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-                result = (this.curPos.col == 1 && this.curPos.row == 1);
-                break;
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            result = (this.curPos.col == 1 && this.curPos.row == 1);
+            break;
 
-            case 5:
-            case 6:
-            case 7:
-            case 8:
-                result = (this.curPos.col == 2 && this.curPos.row == 10);
-                break;
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+            result = (this.curPos.col == 2 && this.curPos.row == 10);
+            break;
 
-            default:
-                result = false;
-                break;
+        default:
+            result = false;
+            break;
         }
 
         return result;
     }
 
     /*
-    Getters and setters
-     */
+      Getters and setters
+    */
 
     public Pos getStartPos() {
         return startPos;
