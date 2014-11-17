@@ -3,6 +3,7 @@
 %%% TeX-master: "../report"
 %%% End:
 
+TODO: Short introduction
 
 The barrier works by having two counters that have to reach the threshold before the cars are released from it. Having only one such counter, one car could rush to the barrier before all of the other cars were even released. But by implementing two, that have to reach their threshold before releasing all their cars, rushing ahead to the same point, and thus stealing a ''release-token`` from one of the other cars, is impossible.
 
@@ -35,16 +36,12 @@ public void sync() throws Exception {
 			this.mutex.V();
 		}
 		// 2nd - all cars must leave ("leaving")
-		// NB: PART LEFT OUT (This part is quite symmetrical to the first part)
-		// Please see appendices for the full code*
-
+		// NB: PART LEFT OUT (This part is symmetrical to the first part)
+		// Please see appendices for the full code
 	} else 
 		this.mutex.V();
 }
 \end{java}
-\begin{center}
-* More specifically, section \ref{sub:app-barr-sync}
-\end{center}
 
 
 When turning on the barrier, the function \code{on()} is called, and it simply checks if the barrier is not already enabled, and if it is not, it is turned on, and the counters are set to zero.
@@ -52,7 +49,7 @@ When turning on the barrier, the function \code{on()} is called, and it simply c
 Switching off the barrier is a bit more interesting, as the function \code{off()} is as followes (enclosed in a try-catch block and with mutual using the \code{mutex}-semaphore):
 
 \begin{java}
-if (this.active) {
+	if (this.active) {
 	this.active = false;
 	this.free(this.incomingCount, BarrierSelector.INCOMING);
 	this.free(this.leavingCount+this.incomingCount, BarrierSelector.LEAVING);
@@ -65,6 +62,64 @@ When turning off the barrier, the semaphore for the ''arriving`` cars is signale
 
 \subsection{Implementation with a monitor}
 \label{sub:bar-moni}
+The implementation of the barrier by using a monitor, makes use of the same idea as the one with semaphores, i.e. using two counters to make sure that all 9 cars get exactly one turn each.
+
+The methods \code{sync()}, \code{on()} and \code{off()} are all \code{synchronized}, so mutual exclusion is implemented in a, at least in our opinion, more simple and comprehensive manner.
+
+\begin{java}
+public synchronized void sync() {
+	if (!this.active)
+		return;
+
+	// 1st - all cars must arrive ("incoming")
+	// Wait until the barrier accepts incoming cars
+	this.waitForMode(BarrierSelector.INCOMING);
+	if(!this.active) //Check if barrier is still active when awoken
+		return;
+
+	this.incomingCount++;
+
+	if(this.incomingCount == this.threshold) {
+		this.mode = BarrierSelector.LEAVING;
+		this.incomingCount = 0;
+
+		notifyAll();
+	}
+	// 2nd - all cars must leave ("leaving")
+	// NB: PART LEFT OUT (This part is symmetrical to the first part)
+	// Please see appendices for the full code
+}
+\end{java}
+
+Firstly, the function checks if the barrier is even activated and returns if not.
+
+Secondly, it calls the auxiliary function \code{waitForMode(selector)}. This function is implemented as follows:
+
+\begin{java}
+private void waitForMode(BarrierSelector selector) {
+	// Wait until the barrier accepts the wanted type of cars
+	while (this.mode != selector) {
+		try {
+			if(!this.active) //Check if barrier is still active when awoken
+				return;
+			else
+				wait();
+		}
+		catch (InterruptedException ex) { return; }
+	}
+}
+\end{java}
+
+This function simply makes the caller of \code{sync()} wait until the barrier either accepts the requested type of cars 
+\footnote{incoming or leaving as described in section \ref{sub:bar-sema}}
+or the barrier is turned off.
+
+When the thread is done waiting for the correct flag, or until the barrier is turned off, it checks - again - if the barrier is active and increments the \code{incomingCount}.
+
+If the incoming car is the last one to arrive, the barrier releases the cars to move on to the ''leaving`` section of the function. The leaving-section is symmetrical to the one just described, and when \code{leavingCount} reaches the threshold, the cars are free to take a new round on the playground.
+
+Regarding \code{on()} and \code{off()}, they are almost identical to the ones described in section \ref{sub:bar-sema}, except that \code{off()} sets the mode to \code{BarrierSelector.INCOMING} and simply calls \code{notifyAll()} instead of an auxiliary function we have implemented ourselves.
+
 TODO!
 
 \subsection{Implementation with a variable threshold}
