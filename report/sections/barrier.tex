@@ -120,10 +120,41 @@ If the incoming car is the last one to arrive, the barrier releases the cars to 
 
 Regarding \code{on()} and \code{off()}, they are almost identical to the ones described in section \ref{sub:bar-sema}, except that \code{off()} sets the mode to \code{BarrierSelector.INCOMING} and simply calls \code{notifyAll()} instead of an auxiliary function we have implemented ourselves.
 
-TODO!
 
 \subsection{Implementation with a variable threshold}
 \label{sub:bar-thres}
+The implementation of the variable threshold, should take care of several different cases:
+
+\begin{enumerate}
+	\item When \code{k} is lower than the current threshold and lower than or equal to the number of cars waiting. In this case all cars should be released.
+	\item When \code{k} is lower than the current threshold, but greater than the current number of waiting cars, the threshold should simply be lowered, but no cars released until the new threshold is reached.
+	\item When \code{k} is higher that the current threshold, the calling thread has to be blocked until all cars have left and then increase the threshold. Or if the barrier is turned off while waiting for the cars to reach the threshold, then it is also increased.
+	\item Finally, when \code{k} is equal to the current threshold, we simply ignore it and return without modifying anything.
+\end{enumerate}
+
+Before checking which case the value of \code{k} fits into, the function, \code{setThreshold(k)}, actually waits for currently leaving cars to actually have left the barrier. If this check is not performed, and the threshold was changed while cars were leaving, unwanted behavior might occur. As the threads (/cars) do not even call \code{sleep()} in between the two steps of the barrier, we think the time spent waiting for the cars to leave, is negligible for all practical purposes. Thus the four cases takes care of the specified functionality.
+
+\emph{The first case} is handled as follows:
+\begin{java}
+this.mode = BarrierSelector.LEAVING;
+this.leavingCount = k - this.incomingCount;
+this.incomingCount = 0;
+this.threshold = k;
+
+notifyAll();
+\end{java}
+
+By setting the mode to ''\code{LEAVING}``, all cars that have arrived will, when awoken, leave the barrier.
+
+The seemingly odd choice of setting \code{leavingCount} to a value less than zero, does actually make sense, as when all cars have left,  \code{leavingCount} will be equal to \code{k}, which by then also happens to be the threshold. And then the mode of barrier will be set to ''\code{INCOMING}``.
+
+\emph{The second case} is handled simply by setting the threshold to the value of \code{k}, as \code{incomingCount} will still be less than this value, and nothing unexpected will occur.
+
+
+TODO: Interesting case, from a concurrent perspective, is when the threshold is increased.
+
+TODO: Either when the barrier is deactivated, or when all the cars that were already waiting have left.
+
 TODO!
 
 
