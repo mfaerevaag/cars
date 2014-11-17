@@ -24,6 +24,8 @@ public class BarrierMonitor {
 
         // Wait until the barrier accepts incoming cars
         this.waitForMode(BarrierSelector.INCOMING);
+        if(!this.active) //Check if barrier is still active when awoken
+            return;
 
         this.incomingCount++;
 
@@ -38,6 +40,8 @@ public class BarrierMonitor {
 
         // Wait until the barrier accepts leaving cars
         this.waitForMode(BarrierSelector.LEAVING);
+        if(!this.active) //Check if barrier is still active when awoken
+            return;
 
         this.leavingCount++;
 
@@ -45,6 +49,7 @@ public class BarrierMonitor {
             this.mode = BarrierSelector.INCOMING;
             this.leavingCount = 0;
 
+            // This statement is part of task "EXTRA (E)" and used to implement a variable threshold value
             if(this.increaseThreshold > 1) {
                 this.threshold = this.increaseThreshold;
                 this.increaseThreshold = -1;
@@ -106,7 +111,7 @@ public class BarrierMonitor {
 
 
     private void waitForMode(BarrierSelector selector) {
-        // Wait until the barrier accepts incoming cars
+        // Wait until the barrier accepts the wanted type of cars
         while (this.mode != selector) {
             try {
                 if(!this.active) //Check if barrier is still active when awoken
@@ -114,7 +119,7 @@ public class BarrierMonitor {
                 else
                     wait();
             }
-            catch (InterruptedException ex) { System.out.println("EXCEPTION"); return; }
+            catch (InterruptedException ex) { return; }
         }
     }
 
