@@ -60,7 +60,7 @@ public class BarrierMonitor {
     }
 
     public synchronized void setThreshold(int k) {
-        // Waiting for all cars "flagged" for leaving.
+        // Waiting for all cars that are flagged for leaving actually leaves.
         // This is always in the order of milliseconds, as cars cannot be sleeping in this period.
         // So we consider it instant.
         while (this.mode == BarrierSelector.LEAVING) {
@@ -81,10 +81,9 @@ public class BarrierMonitor {
 
                 this.mode = BarrierSelector.LEAVING;
 
-                this.leavingCount = - this.incomingCount + k;
+                this.leavingCount = k - this.incomingCount;
                 this.incomingCount = 0;
                 this.threshold = k;
-
 
                 notifyAll();
 
