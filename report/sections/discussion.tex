@@ -14,19 +14,19 @@ Fortunately, and due to the variation of the speeds of the cars, there is not st
 
 \subsection{Semaphores versus Monitors}
 \label{sub:disc-sema-moni}
+Using semaphores allows for finely tuned synchronization, but sometimes at the cost of additional complexity compared to implementing the same functionality using monitors.
 
-TODO: Discuss the pros and cons of the two approaches
-
-TODO: Maintainability, at least in the case of the barrier.
+As aspiring software engineers we highly value code that is easy to comprehend and maintain, so we would prefer to sacrifice some overhead to achieve a better code (TODO: better code base? More maintainable? More correct?).
 
 \subsubsection{Field}
 \label{subsub:disc-field}
-TODO:
+For our implementation of the field, we believe that using semaphores is preferable. This is due to the simplicity of calling \code{P()} to request a new position on the map, and \code{V()} to free the previously held.
 
 \subsubsection{Alley}
 \label{subsub:disc-alley}
-TODO:
+Regarding the alley, we find the monitor-implementation easier to comprehend, and thus likely less error prone when being implemented. From a development perspective, this is definitely to be preferred.
+
 
 \subsubsection{Barrier}
 \label{subsub:disc-barrier}
-TODO:
+Regarding the barrier, we find the two basic (i.e. no variable threshold) implementations equally complex. When we chose to implement the variable threshold, we did it using the monitor as it seemed simpler, as we could avoid calling \code{P()} and \code{V()} on the three semaphores several times just to get proper synchronization.
