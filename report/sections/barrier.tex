@@ -241,4 +241,49 @@ barrier or the barrier is deactivated.
 
 \subsection{Testing}
 \label{sub:bar-test}
-TODO!
+TODO: mention promela attempt?
+
+The barrier can be tested with several tests, implemented in
+\code{CarTest.java}. Firstly, there is tests two to nine which simply
+sets the barrier respectively, starts the same number of cars, minus
+one, before waiting a little and then starting the last one. This
+clearly demonstrates that the barrier does not open before satisfied.
+
+We have also made tests for variable threshold. Test 10 starts all
+cars, sets the barrier threshold to four, then wait a little before
+setting the threshold up to nine. Here one can see that the barrier first
+waits for four cars, before waiting for nine cars after. The test is
+shown in code excerpt~\ref{lst:bar-test}.
+
+\begin{figure}[H]
+\begin{java}
+case 10:
+    log("variable barrier threshold (low to high)");
+
+    setSpeedAll(100);
+
+    cars.startAll();
+    cars.startCar(0);
+    Thread.sleep(1000);
+
+    cars.barrierOn();
+
+    t = 4;
+    log("threshold " + t);
+    cars.barrierSet(t);
+
+    Thread.sleep(2000);
+
+    t = 9;
+    log("threshold " + t);
+    cars.barrierSet(t);
+
+    break;
+\end{java}
+\caption{Test 10 - variable threshold}
+\end{figure}
+
+Test 11 does the same, only it starts by setting it to nine, then sets
+it down to four.
+
+TODO: stress test
