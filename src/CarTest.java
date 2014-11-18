@@ -125,6 +125,18 @@ public class CarTest extends Thread {
                     cars.startAll();
 
                     for (int i = 0; i < 3; i++) {
+                        cars.removeCar(1);
+                        cars.restoreCar(1);
+                    }
+
+                    break;
+
+                case 13:
+                    log("simple remove and restore");
+
+                    cars.startAll();
+
+                    for (int i = 0; i < 3; i++) {
                         Thread.sleep(1000);
 
                         cars.removeCar(1);

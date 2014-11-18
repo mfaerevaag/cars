@@ -88,6 +88,8 @@ public class Car extends Thread {
      */
     public void run() {
         speed = chooseSpeed();
+
+        // start at gate
         curPos = startPos;
         cd.mark(curPos, col, no);
 
@@ -95,14 +97,15 @@ public class Car extends Thread {
             try {
                 sleep(getSpeed());
 
+                // get next position
+                newPos = nextPos();
+
+                // check if at any significant position
+                // cannot be at more than one at the same time
                 if (atGate()) {
                     gate.pass();
                     speed = chooseSpeed();
-                }
-
-                newPos = nextPos();
-
-                if (atAlleyEnterance()) {
+                } else if (atAlleyEnterance()) {
                     this.alley.enter(this.no);
                 } else if (atAlleyExit()) {
                     this.alley.leave(this.no);
@@ -111,29 +114,33 @@ public class Car extends Thread {
                 }
 
             } catch (InterruptedException e) {
+                // do not signal new position, as it hasn't yet been required
                 this.repair(false);
             }
 
             try {
+                // wait for new position
                 this.getSemaphoreFromPos(newPos).P();
 
-                //  Move to new position
+                //  move to new position
                 cd.clear(curPos);
                 cd.mark(curPos, newPos, col, no);
 
                 sleep(getSpeed());
 
+                // clear old position
                 cd.clear(curPos, newPos);
                 cd.mark(newPos, col, no);
 
+                // free old position
                 this.getSemaphoreFromPos(curPos).V();
                 curPos = newPos;
 
             } catch (InterruptedException e) {
+                // if old position not signaled, signal both new and old
                 this.repair(curPos != newPos);
             }
         }
-
     }
 
     /*
@@ -141,18 +148,18 @@ public class Car extends Thread {
     */
 
     private void repair(boolean clearNewPos) {
-        // free current position
+        // signal current position
         this.getSemaphoreFromPos(curPos).V();
         cd.clear(curPos);
 
-        // free new position
+        // signal new position
         if (clearNewPos) {
             this.getSemaphoreFromPos(newPos).V();
             cd.clear(newPos);
         }
 
         // leave alley
-        if (this.inAlley())
+        if (inAlley())
             this.alley.leave(this.no);
 
         // stop thread
