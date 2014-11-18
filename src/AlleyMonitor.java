@@ -26,7 +26,7 @@ public class AlleyMonitor {
         }
     }
 
-    //TODO: note the difference: notify() vs notifyAll()! There are 2 places where upwards bound cars wait, but only 1 where cars going down wait.
+    //please note the difference: notify() vs notifyAll()! There are 2 places where upwards bound cars wait, but only 1 where cars going down wait.
     public synchronized void leave(int no) {
         // get car direction
         AlleyDirection dir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
