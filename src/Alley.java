@@ -13,12 +13,14 @@ public class Alley {
 
     // Heavily inspired by the book p. 170
     public void enter(int no) throws InterruptedException {
-        AlleyDirection newDir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
+        // get direction of car
+        AlleyDirection dir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
 
-        if (newDir == AlleyDirection.UP) {
+        if (dir == AlleyDirection.UP) {
             this.mutexUp.P();
 
             this.upCount++;
+            // if first one waiting, wait for alleyFree
             if (this.upCount == 1)
                 this.alleyFree.P();
 
@@ -36,18 +38,20 @@ public class Alley {
     }
 
     public void leave(int no) throws InterruptedException{
-        AlleyDirection newDir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
+        // get direction of car
+        AlleyDirection dir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
 
-        if (newDir == AlleyDirection.UP) {
+        if (dir == AlleyDirection.UP) {
             this.mutexUp.P();
 
             this.upCount--;
+            // if none left in alley, free it
             if(this.upCount == 0)
                 this.alleyFree.V();
 
             this.mutexUp.V();
 
-        }else {
+        } else {
             this.mutexDown.P();
 
             this.downCount--;
@@ -56,6 +60,5 @@ public class Alley {
 
             this.mutexDown.V();
         }
-
     }
 }

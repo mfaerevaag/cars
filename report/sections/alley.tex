@@ -17,15 +17,66 @@ blocking the cars coming out in the opposite direction.
 
 \subsection{Semaphore implementation}
 \label{sub:all-sema}
-TODO!
+We design our alley implementation as the
+Reader-Writer-Problem~\cite[p. 170]{andrews}, i.e. we have to protect
+both reading and writing with mutual exclusion.
+
+In our implementation we have two variables which need to be
+protected; \code{upCount} and \code{downCount} which counts how many
+cars are going up or down, respectively. In order to protect both
+these variables we have the two semaphores \code{mutexUp} and
+\code{mutexDown}, while also having the semaphore protecting the alley
+from being entered from both ways, \code{alleyFree}.
+
+When a car wants to enter the alley, it must first wait for the
+\code{mutex} semaphore, before incrementing it. It then checks if it
+equals one, which means it is the first one waiting and it must wait
+for the \code{alleyFree} semaphore. Upon receival, it signals the
+\code{mutex} and enters the alley.
+
+Below we have an excerpt from the Java implementation.
+
+\begin{figure}[H]
+\label{lst:alley}
+  \begin{java}
+public void enter(int no) throws InterruptedException {
+  // get direction of car
+  AlleyDirection dir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
+
+  if (dir == AlleyDirection.UP) {
+    this.mutexUp.P();
+
+    this.upCount++;
+    // if first one waiting, wait for alleyFree
+    if (this.upCount == 1)
+      this.alleyFree.P();
+
+    this.mutexUp.V();
+
+  } else {
+    // same, only with downCount
+  }
+}
+  \end{java}
+  \caption{Semaphore solution from \code{Alley.java}}
+\end{figure}
+
+On leaving the alley, the same pattern of steps is made. It waits for
+the \code{mutex}, \emph{decrements} the counter, sees if is the last
+one leaving, and in that case, signals \code{alleyFree}. The
+implementation can be found in the \code{leave}-function, in
+\code{Alley.java}.
+
 
 \subsection{Monitor implementation}
 \label{sub:all-moni}
 TODO!
 
+
 \subsection{Promela proof}
 \label{sub:all-proof}
 TODO!
+
 
 \subsection{Testing}
 \label{sub:all-test}
