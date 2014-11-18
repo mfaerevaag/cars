@@ -141,18 +141,21 @@ public class Car extends Thread {
     */
 
     private void repair(boolean clearNewPos) {
+        // free current position
         this.getSemaphoreFromPos(curPos).V();
         cd.clear(curPos);
 
+        // free new position
         if (clearNewPos) {
             this.getSemaphoreFromPos(newPos).V();
             cd.clear(newPos);
         }
 
-        if (inAlley()) {
+        // leave alley
+        if (this.inAlley())
             this.alley.leave(this.no);
-        }
 
+        // stop thread
         try {
             this.join();
         } catch (InterruptedException e) {

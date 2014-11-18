@@ -81,7 +81,7 @@ public class CarControl implements CarControlI {
             cd.println("Car no. " + no + " repairing...");
         }
 
-            car.interrupt();
+        car.interrupt();
 
         this.cars[no] = null;
     }
