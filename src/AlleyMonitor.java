@@ -35,7 +35,7 @@ public class AlleyMonitor {
             this.upCount--;
 
             if (this.upCount == 0) //Needs to be synchronized due to this check
-                notifyAll();
+                notify();
 
         } else {
             this.downCount--;
