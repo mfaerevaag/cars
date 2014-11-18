@@ -150,12 +150,7 @@ The seemingly odd choice of setting \code{leavingCount} to a value less than zer
 
 \emph{The second case} is handled simply by setting the threshold to the value of \code{k}, as \code{incomingCount} will still be less than this value, and nothing unexpected will occur.
 
-
-TODO: Interesting case, from a concurrent perspective, is when the threshold is increased.
-
-TODO: Either when the barrier is deactivated, or when all the cars that were already waiting have left.
-
-TODO!
+\emph{In the third case} the flag \code{increaseThreshold} is set to the value of \code{k}. When the final car is leaving with the old threshold still in effect, the threshold is lowered. Also, the caller of \code{barrierSet(k)} is blocked until either the cars have left the barrier or the barrier is deactivated.
 
 
 \subsection{Testing}
