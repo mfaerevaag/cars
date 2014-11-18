@@ -3,11 +3,142 @@
 %%% TeX-master: "../report"
 %%% End:
 
-TODO
+Now we will look at the exercise of car maintenance. When
+shift-clicking a car's gate it should be removed from the field for
+maintenance. When control-clicking the gate again, it should be
+added at the gate and started. Solving this includes the challenges of
+stopping a thread (car) in a good manner and making sure that it
+does not cause problems if it waiting for or in the alley. As stated
+in the assignment, we assume the barrier is off.
+
 
 \subsection{Implementation}
 \label{sub:main-moni}
-TODO
+When implementing our solution we decided to use exceptions to manage
+the execution flow. By using several try-catch clauses we can more
+precisely know \emph{where} the point of execution was when the
+exception was thrown, and therefore have a better idea when trying to
+clean up and stopping the thread.
+
+When removing a car for maintenance, the \code{removeCar()} method
+from \code{CarControl} is invoked by the event listener. First, the
+method checks whether the car is already removed and prints a message
+accordingly. In the case where the car is not already begin repaired,
+it interrupts the car's thread (which means the car, since it extends
+\code{java.lang.Thread}), and removes the object for garbage
+collection. As the car should be running when being stopped, the
+exception occurs in car's \code{run()} method. Here we know that we
+should signal the semaphore protecting the car's spot and clear its
+spot on the display. Though, there are more.
+
+In the case that the car is waiting for the next position's semaphore,
+we should also signal that semaphore. It is impossible to know this,
+unless we split into two try-catch clauses, as shown in code
+excerpt~\ref{lst:main-run}.
+
+\begin{figure}[H]
+\label{lst:main-run}
+  \begin{java}
+public void run() {
+    ...
+    while (true) {
+        try {
+            sleep(getSpeed());
+
+            ...
+
+            // check if at any significant position
+            // cannot be at more than one at the same time
+            if (atGate()) {
+                gate.pass();
+                speed = chooseSpeed();
+            } else if (atAlleyEnterance()) {
+                this.alley.enter(this.no);
+            } else if (atAlleyExit()) {
+                this.alley.leave(this.no);
+            } else if (atBarrier()) {
+                this.barrier.sync();
+            }
+
+        } catch (InterruptedException e) {
+            // do not signal new position, as it hasn't yet been required
+            this.repair(false);
+        }
+
+        try {
+            // wait for new position
+            this.getSemaphoreFromPos(newPos).P();
+
+            ...
+
+            sleep(getSpeed());
+
+            ...
+
+            // free old position
+            this.getSemaphoreFromPos(curPos).V();
+            curPos = newPos;
+
+        } catch (InterruptedException e) {
+            // if old position not signaled, signal both new and old
+            this.repair(curPos != newPos);
+        }
+    }
+}
+  \end{java}
+  \caption{Car maintenance solution}
+\end{figure}
+
+When catching the \code{InterruptedException}, thrown by
+\code{interrupt()}, we use the utility method \\
+\code{repair(clearNewPos)} from code excerpt~\ref{lst:main-rep}, to do
+the cleanup. It works by first signaling the current positions
+semaphore, then conditionally signaling the new positions
+semaphore. Notice the parameter \code{clearNewPos}, setting whether to
+also signal the new position. In the second try-catch clause, it is
+called with \code{repair(curPos != newPos)}. Therefore, it will only
+signal the new position if it has not already been done. In the first
+try-catch, we know the new position's semaphore has not been required,
+so we just pass \code{false} as the argument. After signaling the
+relevant semaphores, we need to check if the car is currently in the
+alley. In that case, we have call \code{alley.leave(this.no)}
+manually, to ensure we do not mess up the counters. If we do not do
+this, the alley will have registered the car entering, but not
+leave. This will cause it to think there is always one car in it, so
+the opposite direction will be blocked forever. We check if the car is
+in the alley with the utility method \code{inAlley()}, which can be
+count in the \code{Car} class. Lastly, we stop the thread with
+\code{join()} method.
+
+\begin{figure}[H]
+\label{lst:main-rep}
+  \begin{java}
+private void repair(boolean clearNewPos) {
+    // signal current position
+    this.getSemaphoreFromPos(curPos).V();
+    ...
+
+    // signal new position
+    if (clearNewPos) {
+        this.getSemaphoreFromPos(newPos).V();
+        ...
+    }
+
+    // leave alley
+    if (inAlley())
+        this.alley.leave(this.no);
+
+    // stop thread
+    try {
+        this.join();
+    } catch (InterruptedException e) {
+        cd.println("Exception in Car no. " + no);
+        ...
+    }
+}
+  \end{java}
+  \caption{Car maintenance solution}
+\end{figure}
 
 
 \subsection{Testing}
