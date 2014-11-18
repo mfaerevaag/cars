@@ -5,19 +5,36 @@
 
 TODO: Short introduction
 
-The barrier works by having two counters that have to reach the threshold before the cars are released from it. Having only one such counter, one car could rush to the barrier before all of the other cars were even released. But by implementing two, that have to reach their threshold before releasing all their cars, rushing ahead to the same point, and thus stealing a ''release-token`` from one of the other cars, is impossible.
+The barrier works by having two counters that have to reach the
+threshold before the cars are released from it. Having only one such
+counter, one car could rush to the barrier before all of the other
+cars were even released. But by implementing two, that have to reach
+their threshold before releasing all their cars, rushing ahead to the
+same point, and thus stealing a ``release-token'' from one of the
+other cars, is impossible.
 
 
 \subsection{Implementation with semaphores}
 \label{sub:bar-sema}
-We have implemented the barrier using the three primary functions; \code{sync()}, \code{on()}, and \code{off()} as well as an auxiliary function \code{free()}.
+We have implemented the barrier using the three primary functions;
+\code{sync()}, \code{on()}, and \code{off()} as well as an auxiliary
+function \code{free()}.
 
-The snippet below shows how one of the two counters is implemented in the function \code{sync()}. Obviously, shared variables are enclosed within the statements \code{mutex.P()} and \code{mutex.V()} to ensure mutual exclusion.
+The snippet below shows how one of the two counters is implemented in
+the function \code{sync()}. Obviously, shared variables are enclosed
+within the statements \code{mutex.P()} and \code{mutex.V()} to ensure
+mutual exclusion.
 
-If a car arrives, and the counter is below the threshold, it calls \code{barrierIncoming.P()} and waits until it gets signaled X times. When the counter reaches the threshold, \code{barrierIncoming.V()} is called X times.
+If a car arrives, and the counter is below the threshold, it calls
+\code{barrierIncoming.P()} and waits until it gets signaled X
+times. When the counter reaches the threshold,
+\code{barrierIncoming.V()} is called X times.
 
-The same happens for the semaphore \code{barrierLeaving} in the part of the code that has been left out.
+The same happens for the semaphore \code{barrierLeaving} in the part
+of the code that has been left out.
 
+\begin{figure}[H]
+\label{lst:bar-sema}
 \begin{java}
 public void sync() throws Exception {
 	this.mutex.P();
@@ -38,34 +55,56 @@ public void sync() throws Exception {
 		// 2nd - all cars must leave ("leaving")
 		// NB: PART LEFT OUT (This part is symmetrical to the first part)
 		// Please see appendices for the full code
-	} else 
+
+	} else {
 		this.mutex.V();
+	}
 }
 \end{java}
+\caption{Semaphore solution from \code{Barrier} class}
+\end{figure}
 
 
-When turning on the barrier, the function \code{on()} is called, and it simply checks if the barrier is not already enabled, and if it is not, it is turned on, and the counters are set to zero.
+When turning on the barrier, the function \code{on()} is called, and
+it simply checks if the barrier is not already enabled, and if it is
+not, it is turned on, and the counters are set to zero.
 
-Switching off the barrier is a bit more interesting, as the function \code{off()} is as followes (enclosed in a try-catch block and with mutual using the \code{mutex}-semaphore):
+Switching off the barrier is a bit more interesting, as the function
+\code{off()} is as followes (enclosed in a try-catch block and with
+mutual using the \code{mutex}-semaphore):
 
 \begin{java}
-	if (this.active) {
+if (this.active) {
 	this.active = false;
+
 	this.free(this.incomingCount, BarrierSelector.INCOMING);
-	this.free(this.leavingCount+this.incomingCount, BarrierSelector.LEAVING);
+	this.free(this.leavingCount + this.incomingCount, BarrierSelector.LEAVING);
+
 	this.incomingCount = 0;
 	this.leavingCount = 0;
 }
 \end{java}
 
-When turning off the barrier, the semaphore for the ''arriving`` cars is signaled as many times as arriving cars has been counted - simply to release all of them. If there are any arriving cars, these will then move onto the ''leaving`` section \code{sync()}, and should be accounted for. This is why the semaphore for the leaving cars is signaled (\code{incomingCount} + \code{leavingCount}) times. Finally, the counters are reset.
+When turning off the barrier, the semaphore for the ``arriving'' cars
+is signaled as many times as arriving cars has been counted - simply
+to release all of them. If there are any arriving cars, these will
+then move onto the ``leaving'' section \code{sync()}, and should be
+accounted for. This is why the semaphore for the leaving cars is
+signaled (\code{incomingCount} + \code{leavingCount}) times. Finally,
+the counters are reset.
 
 \subsection{Implementation with a monitor}
 \label{sub:bar-moni}
-The implementation of the barrier by using a monitor, makes use of the same idea as the one with semaphores, i.e. using two counters to make sure that all 9 cars get exactly one turn each.
+The implementation of the barrier by using a monitor, makes use of the
+same idea as the one with semaphores, i.e. using two counters to make
+sure that all 9 cars get exactly one turn each.
 
-The methods \code{sync()}, \code{on()} and \code{off()} are all \code{synchronized}, so mutual exclusion is implemented in a, at least in our opinion, more simple and comprehensive manner.
+The methods \code{sync()}, \code{on()} and \code{off()} are all
+\code{synchronized}, so mutual exclusion is implemented in a, at least
+in our opinion, more simple and comprehensive manner.
 
+\begin{figure}[H]
+\label{lst:bar-moni}
 \begin{java}
 public synchronized void sync() {
 	if (!this.active)
@@ -90,11 +129,17 @@ public synchronized void sync() {
 	// Please see appendices for the full code
 }
 \end{java}
+\caption{Monitor solution from \code{BarrierMonitor} class}
+\end{figure}
 
-Firstly, the function checks if the barrier is even activated and returns if not.
+Firstly, the function checks if the barrier is even activated and
+returns if not.
 
-Secondly, it calls the auxiliary function \code{waitForMode(selector)}. This function is implemented as follows:
+Secondly, it calls the auxiliary function
+\code{waitForMode(selector)}. This function is implemented as follows:
 
+\begin{figure}[H]
+\label{lst:bar-wait}
 \begin{java}
 private void waitForMode(BarrierSelector selector) {
 	// Wait until the barrier accepts the wanted type of cars
@@ -109,30 +154,60 @@ private void waitForMode(BarrierSelector selector) {
 	}
 }
 \end{java}
+\caption{\code{waitForMode(selector) from \code{BarrierMonitor} class}}
+\end{figure}
 
-This function simply makes the caller of \code{sync()} wait until the barrier either accepts the requested type of cars 
-\footnote{incoming or leaving as described in section \ref{sub:bar-sema}}
-or the barrier is turned off.
+This function simply makes the caller of \code{sync()} wait until the
+barrier either accepts the requested type of cars \footnote{incoming
+  or leaving as described in section \ref{sub:bar-sema}} or the
+barrier is turned off.
 
-When the thread is done waiting for the correct flag, or until the barrier is turned off, it checks - again - if the barrier is active and increments the \code{incomingCount}.
+When the thread is done waiting for the correct flag, or until the
+barrier is turned off, it checks - again - if the barrier is active
+and increments the \code{incomingCount}.
 
-If the incoming car is the last one to arrive, the barrier releases the cars to move on to the ''leaving`` section of the function. The leaving-section is symmetrical to the one just described, and when \code{leavingCount} reaches the threshold, the cars are free to take a new round on the playground.
+If the incoming car is the last one to arrive, the barrier releases
+the cars to move on to the ``leaving'' section of the function. The
+leaving-section is symmetrical to the one just described, and when
+\code{leavingCount} reaches the threshold, the cars are free to take a
+new round on the playground.
 
-Regarding \code{on()} and \code{off()}, they are almost identical to the ones described in section \ref{sub:bar-sema}, except that \code{off()} sets the mode to \code{BarrierSelector.INCOMING} and simply calls \code{notifyAll()} instead of an auxiliary function we have implemented ourselves.
+Regarding \code{on()} and \code{off()}, they are almost identical to
+the ones described in section \ref{sub:bar-sema}, except that
+\code{off()} sets the mode to \code{BarrierSelector.INCOMING} and
+simply calls \code{notifyAll()} instead of an auxiliary function we
+have implemented ourselves.
 
 
 \subsection{Implementation with a variable threshold}
 \label{sub:bar-thres}
-The implementation of the variable threshold, should take care of several different cases:
+The implementation of the variable threshold, should take care of
+several different cases:
 
 \begin{enumerate}
-	\item When \code{k} is lower than the current threshold and lower than or equal to the number of cars waiting. In this case all cars should be released.
-	\item When \code{k} is lower than the current threshold, but greater than the current number of waiting cars, the threshold should simply be lowered, but no cars released until the new threshold is reached.
-	\item When \code{k} is higher that the current threshold, the calling thread has to be blocked until all cars have left and then increase the threshold. Or if the barrier is turned off while waiting for the cars to reach the threshold, then it is also increased.
-	\item Finally, when \code{k} is equal to the current threshold, we simply ignore it and return without modifying anything.
+\item When \code{k} is lower than the current threshold and lower than
+  or equal to the number of cars waiting. In this case all cars should
+  be released.
+\item When \code{k} is lower than the current threshold, but greater
+  than the current number of waiting cars, the threshold should simply
+  be lowered, but no cars released until the new threshold is reached.
+\item When \code{k} is higher that the current threshold, the calling
+  thread has to be blocked until all cars have left and then increase
+  the threshold. Or if the barrier is turned off while waiting for the
+  cars to reach the threshold, then it is also increased.
+\item Finally, when \code{k} is equal to the current threshold, we
+  simply ignore it and return without modifying anything.
 \end{enumerate}
 
-Before checking which case the value of \code{k} fits into, the function, \code{setThreshold(k)}, actually waits for currently leaving cars to actually have left the barrier. If this check is not performed, and the threshold was changed while cars were leaving, unwanted behavior might occur. As the threads (/cars) do not even call \code{sleep()} in between the two steps of the barrier, we think the time spent waiting for the cars to leave, is negligible for all practical purposes. Thus the four cases takes care of the specified functionality.
+Before checking which case the value of \code{k} fits into, the
+function, \code{setThreshold(k)}, actually waits for currently leaving
+cars to actually have left the barrier. If this check is not
+performed, and the threshold was changed while cars were leaving,
+unwanted behavior might occur. As the threads (/cars) do not even call
+\code{sleep()} in between the two steps of the barrier, we think the
+time spent waiting for the cars to leave, is negligible for all
+practical purposes. Thus the four cases takes care of the specified
+functionality.
 
 \emph{The first case} is handled as follows:
 \begin{java}
@@ -144,13 +219,24 @@ this.threshold = k;
 notifyAll();
 \end{java}
 
-By setting the mode to ''\code{LEAVING}``, all cars that have arrived will, when awoken, leave the barrier.
+By setting the mode to ``\code{LEAVING}'', all cars that have arrived
+will, when awoken, leave the barrier.
 
-The seemingly odd choice of setting \code{leavingCount} to a value less than zero, does actually make sense, as when all cars have left,  \code{leavingCount} will be equal to \code{k}, which by then also happens to be the threshold. And then the mode of barrier will be set to ''\code{INCOMING}``.
+The seemingly odd choice of setting \code{leavingCount} to a value
+less than zero, does actually make sense, as when all cars have left,
+\code{leavingCount} will be equal to \code{k}, which by then also
+happens to be the threshold. And then the mode of barrier will be set
+to ``\code{INCOMING}''.
 
-\emph{The second case} is handled simply by setting the threshold to the value of \code{k}, as \code{incomingCount} will still be less than this value, and nothing unexpected will occur.
+\emph{The second case} is handled simply by setting the threshold to
+the value of \code{k}, as \code{incomingCount} will still be less than
+this value, and nothing unexpected will occur.
 
-\emph{In the third case} the flag \code{increaseThreshold} is set to the value of \code{k}. When the final car is leaving with the old threshold still in effect, the threshold is lowered. Also, the caller of \code{barrierSet(k)} is blocked until either the cars have left the barrier or the barrier is deactivated.
+\emph{In the third case} the flag \code{increaseThreshold} is set to
+the value of \code{k}. When the final car is leaving with the old
+threshold still in effect, the threshold is lowered. Also, the caller
+of \code{barrierSet(k)} is blocked until either the cars have left the
+barrier or the barrier is deactivated.
 
 
 \subsection{Testing}
