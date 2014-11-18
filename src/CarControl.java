@@ -1,12 +1,12 @@
 //Mandatory assignment
 //Course 02158 Concurrent Programming, DTU, Fall 2014
 
-//Hans Henrik Løvengreen    Oct 6, 2014
+//Hans Henrik Loevengreen    Oct 6, 2014
 
 public class CarControl implements CarControlI {
 
     CarDisplayI cd;           // Reference to GUI
-    Car[] cars;                // Cars
+    Car[] cars;               // Cars
     Gate[] gate;              // Gates
     AlleyMonitor alley;       // Alley
     BarrierMonitor barrier;   // Barrier
