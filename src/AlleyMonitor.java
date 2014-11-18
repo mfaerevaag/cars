@@ -7,8 +7,9 @@ public class AlleyMonitor {
         this.downCount = 0;
     }
 
-    public synchronized void enter(int carNo) throws InterruptedException {
-        AlleyDirection dir = (carNo < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
+    public synchronized void enter(int no) throws InterruptedException {
+        // get car direction
+        AlleyDirection dir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
 
         if (dir == AlleyDirection.UP) {
             // Wait while there are cars going the opposite direction.
@@ -26,14 +27,15 @@ public class AlleyMonitor {
     }
 
     //TODO: note the difference: notify() vs notifyAll()! There are 2 places where upwards bound cars wait, but only 1 where cars going down wait.
-    public synchronized void leave(int carNo) {
-        AlleyDirection dir = (carNo < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
+    public synchronized void leave(int no) {
+        // get car direction
+        AlleyDirection dir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
 
         if (dir == AlleyDirection.UP) {
             this.upCount--;
 
             if (this.upCount == 0) //Needs to be synchronized due to this check
-                notify();
+                notifyAll();
 
         } else {
             this.downCount--;

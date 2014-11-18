@@ -37,7 +37,7 @@ for the \code{alleyFree} semaphore. Upon receival, it signals the
 Below we have an excerpt from the Java implementation.
 
 \begin{figure}[H]
-\label{lst:alley}
+\label{lst:all-sem}
   \begin{java}
 public void enter(int no) throws InterruptedException {
   // get direction of car
@@ -70,8 +70,52 @@ implementation can be found in the \code{leave}-function, in
 
 \subsection{Monitor implementation}
 \label{sub:all-moni}
-TODO!
+The monitor implementation utilizes the \code{wait} and \code{notify}
+methods of \code{java.lang.Object}. This allows for easy signaling
+between threads, where we only have the \code{upCount} and
+\code{downCount} variables. Therefore, instead of waiting for the
+semaphore to be signaled, it calls the \code{wait} method on the
+thread.
 
+More specifically, when a car tries to enter the alley it waits
+(calling the \code{wait} method) until the \code{count} variable for
+the opposite direction is zero, meaning there are no cars in the alley
+going the opposite direction. It then increments the \code{count}
+variable for its direction and enters the alley.
+
+\begin{figure}[H]
+\label{lst:all-mon}
+  \begin{java}
+public synchronized void enter(int no) throws InterruptedException {
+    // get car direction
+    AlleyDirection dir = (no < 5) ? AlleyDirection.UP : AlleyDirection.DOWN;
+
+    if (dir == AlleyDirection.UP) {
+        // wait while there are cars going the opposite direction
+        while (this.downCount > 0)
+            wait();
+
+        this.upCount++;
+
+    } else {
+        // same, but opposite variables
+    }
+}
+  \end{java}
+  \caption{Monitor solution from \code{AlleyMonitor.java}}
+\end{figure}
+
+When trying to leave we again follow the same pattern of steps, only
+in the opposite order. The car starts with decrementing the
+\code{count} variable and then notifying the waiting car by calling
+\code{notify}.
+
+We actually use \code{notifyAll}, and not \code{notify}, to make sure
+we notify the correct car (as there is at most one car waiting). This
+could be optimized, but we prioritize correctness over
+performance. Also, Java ``suffers'' from spurious wake ups of waiting
+threads, so one could question whether the use of \code{notify}
+instead of \code{notifyAll} would have a significant effect.
 
 \subsection{Promela proof}
 \label{sub:all-proof}
