@@ -105,17 +105,19 @@ public synchronized void enter(int no) throws InterruptedException {
   \caption{Monitor solution from \code{AlleyMonitor.java}}
 \end{figure}
 
-When trying to leave we again follow the same pattern of steps, only
+When a car is leaving we follow the same pattern of steps, only
 in the opposite order. The car starts with decrementing the
-\code{count} variable and then notifying the waiting car by calling
-\code{notify}.
+\code{count} variable and then notifies the waiting car(s) by calling either \code{notify()} or \code{notifyAll()}.
 
-We actually use \code{notifyAll}, and not \code{notify}, to make sure
-we notify the correct car (as there is at most one car waiting). This
-could be optimized, but we prioritize correctness over
-performance. Also, Java ``suffers'' from spurious wake ups of waiting
-threads, so one could question whether the use of \code{notify}
-instead of \code{notifyAll} would have a significant effect.
+\code{notify()} is used when the last of the upwards bound cars leave, as there is only a single line of downwards bound cars waiting, whereas there are two lines of cars waiting to go upwards and therefore \code{notifyAll()} is called when the last car headed downwards leaves.
+
+
+%We actually use \code{notifyAll}, and not \code{notify}, to make sure
+%we notify the correct car (as there is at most one car waiting). This
+%could be optimized, but we prioritize correctness over
+%performance. Also, Java ``suffers'' from spurious wake ups of waiting
+%threads, so one could question whether the use of \code{notify}
+%instead of \code{notifyAll} would have a significant effect.
 
 \subsection{Liveness and safety properties}
 \label{sub:all-proof}
