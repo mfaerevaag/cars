@@ -4,11 +4,11 @@
 %%% End:
 
 The alley is the narrow path on the left side of the board, where
-there can fit no more than one car side-by-side. As we have solved
-there challenge with collision, if two cars was to go into the alley,
-one from each side, they would create a deadlock as neither one of
-them can drive through the other. To solve this we need a way of
-telling if there are already cars in the alley, traveling the opposite
+there can fit no more than one car side-by-side. As we have solved the
+challenge with collisions, if two cars was to go into the alley, one
+from each side, they would create a deadlock as neither one of them
+can drive through the other. To solve this we need a way of telling if
+there are already cars in the alley, traveling the opposite
 direction. If that is the case, then the car should wait until the
 alley is free of cars, and then drive in. Of course, the cars waiting
 for the alley to become free must wait in a spot where they are not
