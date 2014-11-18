@@ -5,7 +5,7 @@
 
 The alley is the narrow path on the left side of the board, where
 there can fit no more than one car side-by-side. As we have solved the
-challenge with collisions, if two cars was to go into the alley, one
+challenge with collisions, if two cars were to go into the alley, one
 from each side, they would create a deadlock as neither one of them
 can drive through the other. To solve this we need a way of telling if
 there are already cars in the alley, traveling the opposite
@@ -17,7 +17,7 @@ blocking the cars coming out in the opposite direction.
 
 \subsection{Semaphore implementation}
 \label{sub:all-sema}
-We design our alley implementation as the
+In the design of our alley implementation, we have drawn heavy inspiration from the
 Reader-Writer-Problem~\cite[p. 170]{andrews}, i.e. we have to protect
 both reading and writing with mutual exclusion.
 
@@ -29,10 +29,10 @@ these variables we have the two semaphores \code{mutexUp} and
 from being entered from both ways, \code{alleyFree}.
 
 When a car wants to enter the alley, it must first wait for the
-\code{mutex} semaphore, before incrementing it. It then checks if it
-equals one, which means it is the first one waiting and it must wait
+\code{mutex} semaphore, before incrementing the counter. It then checks if the counter
+equals one, which means the car is the first one waiting and it must wait
 for the \code{alleyFree} semaphore. Upon receival, it signals the
-\code{mutex} and enters the alley.
+\code{mutex}, such that others cars going the same direction can enter too, and enters the alley.
 
 Below we have an excerpt from the Java implementation.
 
