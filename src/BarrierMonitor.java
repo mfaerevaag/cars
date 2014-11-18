@@ -94,7 +94,7 @@ public class BarrierMonitor {
         } else if (k > this.threshold) {
             this.increaseThreshold = k;
 
-            while (this.mode != BarrierSelector.LEAVING) {
+            while (this.mode == BarrierSelector.INCOMING) {
                 try {
                     if(!this.active) { //Check if barrier is still active when awoken
                         this.threshold = k;
