@@ -15,12 +15,12 @@ from one spot to another.
 \subsection{Implementation}
 \label{sub:field-impl}
 A simple way of implementing the field with semaphores would be to
-have a two-dimentional array, with the same sizes as the field, with
+have a two-dimensional array, with the same sizes as the field, with
 semaphores. This means, one semaphore per spot on the
 board. Therefore, no spot can be occupied by more than one car, which
 makes it impossible for the cars to collide.
 
-Although a simple solution, it is not very effiecient. One can imagine
+Although a simple solution, it is not very efficient. One can imagine
 a solution where there are only as many semaphores in total, as there
 are cars. This, though, causes challenges when deciding on the
 correct semaphore to wait on. We have chosen not to
@@ -29,11 +29,11 @@ prioritize this in our solution of the assignment, but instead to focus on the c
 
 \subsection{Testing}
 \label{sub:field-test}
-It is fairly simple to test whether collitions occurs. First, turn on
+It is fairly simple to test whether collisions occurs. First, turn on
 the ``keep crash'' option in the GUI, to make it easier to see if a
 crash occurs as the spot will be marked with a red dot.
 
 Now, one can simply start all the cars and observe, or run test number
 1. All this test does is to greatly increase the speed of cars 1 and 8
 (one in each direction). This forces them to constantly bump into the
-car infront, as it is traveling much slower.
+car in front, as it is traveling much slower.
