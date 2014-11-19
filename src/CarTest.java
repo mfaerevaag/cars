@@ -1,7 +1,11 @@
+import java.util.Random;
+
 public class CarTest extends Thread {
 
     private CarTestingI cars;
     private int testNo;
+
+    private final static int RAND_MAX = 10;
 
     public CarTest(CarTestingI ct, int no) {
         this.cars = ct;
@@ -9,7 +13,10 @@ public class CarTest extends Thread {
     }
 
     public void run() {
-        int t; // for convenience when setting and logging threshold
+        // common variables for convenience
+        int t; // threshold
+        Random rand; // random number generator
+        int n; // number of iterations
 
         try {
             switch (testNo) {
@@ -120,31 +127,42 @@ public class CarTest extends Thread {
                  */
 
                 case 12:
-                    log("simple remove and restore");
+                    log("rapid remove and restore");
+
+                    rand = createRand();
+                    n = rand.nextInt(8) + 1;
 
                     cars.startAll();
+                    Thread.sleep(1000);
 
-                    for (int i = 0; i < 3; i++) {
-                        cars.removeCar(1);
-                        cars.restoreCar(1);
+                    for (int i = 0; i < 10; i++) {
+                        cars.removeCar(n);
+                        cars.restoreCar(n);
                     }
+
+                    cars.stopAll();
 
                     break;
 
                 case 13:
-                    log("simple remove and restore");
+                    log("maintenance stress test");
 
+                    rand = createRand();
+
+                    setSpeedAll(30);
                     cars.startAll();
 
-                    for (int i = 0; i < 3; i++) {
+                    for (int i = 0; i < 100; i++) {
+                        n = rand.nextInt(8) + 1;
+                        cars.removeCar(n);
+
                         Thread.sleep(1000);
 
-                        cars.removeCar(1);
-
-                        Thread.sleep(1000);
-
-                        cars.restoreCar(1);
+                        cars.restoreCar(n);
+                        cars.setSpeed(n, 30);
                     }
+
+                    cars.stopAll();
 
                     break;
 
@@ -153,7 +171,7 @@ public class CarTest extends Thread {
                     // Change speed to double of default values
                     log("doubling speeds");
                     for (int i = 1; i < 9; i++)
-                        cars.setSpeed(i,50);
+                        cars.setSpeed(i, 50);
                     break;
 
                 default:
@@ -176,6 +194,15 @@ public class CarTest extends Thread {
     private void setSpeedAll(int speed) {
         for (int i = 1; i < 9; i++)
             cars.setSpeed(i, speed);
+    }
+
+    private Random createRand() {
+        Random seedGen = new Random();
+        int seed = seedGen.nextInt();
+
+        log("random seed = " + seed);
+
+        return new Random(seed);
     }
 
 }
