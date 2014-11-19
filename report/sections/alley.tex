@@ -37,7 +37,6 @@ for the \code{alleyFree} semaphore. Upon receival, it signals the
 Below we have an excerpt from the Java implementation.
 
 \begin{figure}[H]
-\label{lst:all-sem}
   \begin{java}
 public void enter(int no) throws InterruptedException {
   // get direction of car
@@ -59,6 +58,7 @@ public void enter(int no) throws InterruptedException {
 }
   \end{java}
   \caption{Semaphore solution from \code{Alley} class}
+\label{lst:all-sem}
 \end{figure}
 
 On leaving the alley, the same pattern of steps is made. It waits for
@@ -84,7 +84,6 @@ going the opposite direction. It then increments the \code{count}
 variable for its direction and enters the alley.
 
 \begin{figure}[H]
-\label{lst:all-mon}
   \begin{java}
 public synchronized void enter(int no) throws InterruptedException {
     // get car direction
@@ -103,6 +102,7 @@ public synchronized void enter(int no) throws InterruptedException {
 }
   \end{java}
   \caption{Monitor solution from \code{AlleyMonitor} class}
+\label{lst:all-mon}
 \end{figure}
 
 When a car is leaving we follow the same pattern of steps, only

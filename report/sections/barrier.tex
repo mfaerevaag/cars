@@ -35,7 +35,6 @@ The same happens for the semaphore \code{barrierLeaving} in the part
 of the code that has been left out.
 
 \begin{figure}[H]
-\label{lst:bar-sema}
 \begin{java}
 public void sync() throws Exception {
 	this.mutex.P();
@@ -63,6 +62,7 @@ public void sync() throws Exception {
 }
 \end{java}
 \caption{Semaphore solution from \code{Barrier} class}
+\label{lst:bar-sema}
 \end{figure}
 
 
@@ -105,7 +105,6 @@ The methods \code{sync()}, \code{on()} and \code{off()} are all
 in our opinion, more simple and comprehensive manner.
 
 \begin{figure}[H]
-\label{lst:bar-moni}
 \begin{java}
 public synchronized void sync() {
 	if (!this.active)
@@ -131,6 +130,7 @@ public synchronized void sync() {
 }
 \end{java}
 \caption{Monitor solution from \code{BarrierMonitor} class}
+\label{lst:bar-moni}
 \end{figure}
 
 Firstly, the function checks if the barrier is even activated and
@@ -140,7 +140,6 @@ Secondly, it calls the auxiliary function
 \code{waitForMode(selector)}. This function is implemented as follows:
 
 \begin{figure}[H]
-\label{lst:bar-wait}
 \begin{java}
 private void waitForMode(BarrierSelector selector) {
 	// Wait until the barrier accepts the wanted type of cars
@@ -156,6 +155,7 @@ private void waitForMode(BarrierSelector selector) {
 }
 \end{java}
 \caption{\code{waitForMode(selector) from \code{BarrierMonitor} class}}
+\label{lst:bar-wait}
 \end{figure}
 
 This function simply makes the caller of \code{sync()} wait until the
@@ -245,10 +245,10 @@ barrier or the barrier is deactivated.
 TODO: mention promela attempt?
 
 The barrier can be tested with several tests, implemented in
-\code{CarTest.java}. Firstly, there is tests two to nine which simply
-sets the barrier respectively, starts the same number of cars, minus
+\code{CarTest.java}. Firstly, there are tests two through nine which simply
+sets the barrier threshold to the number of the test, starts the same number of cars, minus
 one, before waiting a little and then starting the last one. This
-clearly demonstrates that the barrier does not open before satisfied.
+clearly demonstrates that the barrier does not open before the threshold is reached.
 
 We have also made tests for variable threshold. Test 10 starts all
 cars, sets the barrier threshold to four, then wait a little before
@@ -282,6 +282,7 @@ case 10:
     break;
 \end{java}
 \caption{Test 10 - variable threshold}
+\label{lst:bar-test}
 \end{figure}
 
 Test 11 does the same, only it starts by setting it to nine, then sets

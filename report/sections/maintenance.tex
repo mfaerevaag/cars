@@ -36,7 +36,6 @@ unless we split into two try-catch clauses, as shown in code
 excerpt~\ref{lst:main-run}.
 
 \begin{figure}[H]
-\label{lst:main-run}
   \begin{java}
 public void run() {
     ...
@@ -86,6 +85,7 @@ public void run() {
 }
   \end{java}
   \caption{Car maintenance solution}
+\label{lst:main-run}
 \end{figure}
 
 When catching the \code{InterruptedException}, thrown by
@@ -108,7 +108,6 @@ in the alley with the utility method \code{inAlley()}, which can be
 count in the \code{Car} class. Lastly, we stop the thread by calling \code{join()}.
 
 \begin{figure}[H]
-\label{lst:main-rep}
   \begin{java}
 private void repair(boolean clearNewPos) {
     // signal current position
@@ -135,6 +134,7 @@ private void repair(boolean clearNewPos) {
 }
   \end{java}
   \caption{Car maintenance solution}
+\label{lst:main-rep}  
 \end{figure}
 
 
