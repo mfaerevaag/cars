@@ -23,8 +23,6 @@ which semaphores should be signaled or positions on the field that
 should be cleared. As we will see in a bit, this varies greatly
 depending on the point of execution when the exception occurred.
 
-TODO: thread join
-
 When removing a car for maintenance, the \code{removeCar()} method
 from \code{CarControl} is invoked by the event listener. First, the
 method checks whether the car is already removed and prints a message
@@ -114,23 +112,6 @@ cleanup. It works by doing a switch-statement on the state of the car,
 as each state represents its own edge case~\footnote{Situation only
   occurring with very specific set of parameters}.
 
-% first signaling the current positions semaphore,
-% then conditionally signaling the new positions semaphore. Notice the
-% parameter \code{clearNewPos}, setting whether to also signal the new
-% position. In the second try-catch clause, it is called with
-% \code{repair(curPos != newPos)}. Therefore, it will only signal the
-% new position if it has not already been done. In the first try-catch,
-% we know the new position's semaphore has not been acquired, so we just
-% pass \code{false} as the argument. After signaling the relevant
-% semaphores, we need to check if the car is currently in the alley. In
-% that case, we have to call \code{alley.leave(this.no)}, to ensure we
-% do not mess up the counters. If we do not do this, the alley will have
-% registered the car entering, but not leaving. This will cause it to
-% think there is always one car in it, so the opposite direction will be
-% blocked forever. We check if the car is in the alley with the utility
-% method \code{inAlley()}, which can be count in the \code{Car}
-% class. Lastly, we stop the thread by calling \code{join()}.
-
 \begin{figure}[H]
   \begin{java}
 private void repair() {
@@ -170,7 +151,7 @@ private void repair() {
 }
   \end{java}
   \caption{Car maintenance solution}
-\label{lst:main-rep}  
+\label{lst:main-rep}
 \end{figure}
 
 We will give a brief outline of each state, and how to cleanup after it:
