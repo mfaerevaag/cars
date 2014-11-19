@@ -40,12 +40,7 @@ To keep track of the point of execution we have added a field to the
 
 \begin{java}
 private enum State {
-    INIT,
-    WAITING_FOR_SPECIAL,
-    WAITING_FOR_POS,
-    MOVING,
-    ARRIVED,
-    FINISHED;
+    INIT, WAITING_FOR_SPECIAL, WAITING_FOR_POS, MOVING, ARRIVED, FINISHED;
 }
 \end{java}
 
@@ -54,46 +49,32 @@ The code excerpt~\ref{lst:main-run} shows the outline of the
 
 \begin{figure}[H]
   \begin{java}
-public void run() {
-    // start at gate
+public void run() { // start at gate
     ...
-
     while (true) {
         try {
             this.state = State.INIT;
-
             sleep(getSpeed());
 
-            // get next position
-
+            // get next position...
             this.state = State.WAITING_FOR_SPECIAL;
-
-            // check if at any significant position
-            ...
+            // check if at any significant position...
 
             this.state = State.WAITING_FOR_POS;
-
             // wait for new position
             this.getSemaphoreFromPos(newPos).P();
 
             this.state = State.MOVING;
-
-            // move to new position
-            ...
-
+            // move to new position...
             sleep(getSpeed());
 
             this.state = State.ARRIVED;
 
-            // clear old position
-            ...
-
+            // clear old position...
             this.state = State.FINISHED;
 
             // free old position
             this.getSemaphoreFromPos(curPos).V();
-            ...
-
         } catch (InterruptedException e) {
             // if old position not signaled, signal both new and old
             this.repair();

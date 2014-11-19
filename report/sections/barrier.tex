@@ -55,7 +55,6 @@ public void sync() throws Exception {
 		// 2nd - all cars must leave ("leaving")
 		// NB: PART LEFT OUT (This part is symmetrical to the first part)
 		// Please see appendices for the full code
-
 	} else {
 		this.mutex.V();
 	}
@@ -77,10 +76,8 @@ mutual using the \code{mutex}-semaphore):
 \begin{java}
 if (this.active) {
 	this.active = false;
-
 	this.free(this.incomingCount, BarrierSelector.INCOMING);
 	this.free(this.leavingCount + this.incomingCount, BarrierSelector.LEAVING);
-
 	this.incomingCount = 0;
 	this.leavingCount = 0;
 }
@@ -121,10 +118,8 @@ public synchronized void sync() {
 	if(this.incomingCount == this.threshold) {
 		this.mode = BarrierSelector.LEAVING;
 		this.incomingCount = 0;
-
 		notifyAll();
-	}
-	// 2nd - all cars must leave ("leaving")
+	}	// 2nd - all cars must leave ("leaving")
 	// NB: PART LEFT OUT (This part is symmetrical to the first part)
 	// Please see appendices for the full code
 }
@@ -216,7 +211,6 @@ this.mode = BarrierSelector.LEAVING;
 this.leavingCount = k - this.incomingCount;
 this.incomingCount = 0;
 this.threshold = k;
-
 notifyAll();
 \end{java}
 
@@ -268,17 +262,14 @@ case 10:
     Thread.sleep(1000);
 
     cars.barrierOn();
-
     t = 4;
     log("threshold " + t);
     cars.barrierSet(t);
-
     Thread.sleep(2000);
 
     t = 9;
     log("threshold " + t);
     cars.barrierSet(t);
-
     break;
 \end{java}
 \caption{Test 10 - variable threshold}
@@ -287,5 +278,3 @@ case 10:
 
 Test 11 does the same, only it starts by setting it to nine, then sets
 it down to four.
-
-TODO: stress test
