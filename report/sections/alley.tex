@@ -155,12 +155,24 @@ This is what is used in the car \code{proctype} to check that the invariant hold
 assert(proof_up_in_alley == 0 && proof_down_in_alley > 0);
 \end{promela}
 
+And in the other direction:
+\begin{promela}
+assert(proof_down_in_alley == 0 && proof_up_in_alley > 0);
+\end{promela}
 
 
-Even though the check is only done when at least one car is inside the alley, the invariant always hold, as it trivially holds when there is no car inside the alley.
+\emph{Even though the check is only performed when at least one car is inside the alley, the invariant always hold, as it trivially holds when there is no car inside the alley.}
 
+When we run the Spin-verification, no assertions are violated. Furthermore we get the following information:
 
-TODO - model results
+\begin{itemize}
+	\item State-vector 52 byte, depth reached 4812, errors: 0
+	\item 39185 states, stored
+	\item 68035 states, matched
+	\item 107220 transitions (= stored+matched)
+\end{itemize}
+
+Even though each car loop its instructions, Spin recognizes states it has previously been in, and thus do not run forever despite the fact that the loop is not intended to ever terminate. This is likely the reason why there are so many matched states, as each state can possibly be reached from different sequences of execution.
 
 \subsubsection{Liveness}
 We cannot really prove this, but as a few rounds of execution will reveal that cars in queue to enter the alley will eventually do so. This is also helped by the fact that the speed of the cars vary with each round, such that the cars with access to the alley will most likely not continue to keep the access forever. Thus, the queued cars will not starve.
