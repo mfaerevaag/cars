@@ -75,10 +75,10 @@ public class CarControl implements CarControlI {
         Car car = this.cars[no];
 
         if (car == null) {
-            cd.println("Car " + no + " already repairing");
+            cd.println("Car #" + no + " already repairing");
             return;
         } else {
-            cd.println("Car no. " + no + " repairing...");
+            cd.println("Car #" + no + " repairing...");
         }
 
         car.interrupt();
@@ -88,10 +88,10 @@ public class CarControl implements CarControlI {
 
     public void restoreCar(int no) {
         if (this.cars[no] != null) {
-            cd.println("Car " + no + " not repairing");
+            cd.println("Car #" + no + " not repairing");
             return;
         } else {
-            cd.println("Car no. " + no + " restored");
+            cd.println("Car #" + no + " restored");
         }
 
         this.cars[no] = new Car(no, cd, this.gate[no], this.semap, this.alley, this.barrier);

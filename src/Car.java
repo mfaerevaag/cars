@@ -2,10 +2,20 @@ import java.awt.Color;
 
 public class Car extends Thread {
 
+    private enum State {
+        INIT,
+        WAITING_FOR_SPECIAL,
+        WAITING_FOR_POS,
+        MOVING,
+        ARRIVED,
+        FINISHED;
+    }
+
     private int baseSpeed = 100;     // Degree of slowness
     private int variation =  50;     // Percentage of base speed
 
     private int no;                  // Car number
+    private State state;             // State of car
     private Gate gate;               // Gate at startposition
     private Semaphore[][] semaMap;   // The entire map as semaphores
 
@@ -39,6 +49,7 @@ public class Car extends Thread {
      */
     public Car(int no, CarDisplayI cd, Gate gate, Semaphore[][] semaMap, AlleyMonitor alley, BarrierMonitor barrier) {
         this.no = no;
+        this.state = State.INIT;
         this.cd = cd;
 
         this.gate = gate;
@@ -95,11 +106,14 @@ public class Car extends Thread {
 
         while (true) {
             try {
+                this.state = State.INIT;
+
                 sleep(getSpeed());
 
                 // get next position
                 newPos = nextPos();
 
+                this.state = State.WAITING_FOR_SPECIAL;
                 // check if at any significant position
                 // cannot be at more than one at the same time
                 if (atGate()) {
@@ -113,32 +127,39 @@ public class Car extends Thread {
                     this.barrier.sync();
                 }
 
-            } catch (InterruptedException e) {
-                // do not signal new position, as it hasn't yet been required
-                this.repair(false);
-            }
-
-            try {
+                this.state = State.WAITING_FOR_POS;
                 // wait for new position
                 this.getSemaphoreFromPos(newPos).P();
 
-                //  move to new position
+                this.state = State.MOVING;
+                // move to new position
                 cd.clear(curPos);
                 cd.mark(curPos, newPos, col, no);
 
+//                // test
+//                if (inAlley()) {
+//                    cd.mark(curPos, Color.YELLOW, no);
+//                } else if (atAlleyEnterance()) {
+//                    cd.mark(curPos, Color.GREEN, no);
+//                } else if (atAlleyExit()) {
+//                    cd.mark(curPos, Color.RED, no);
+//                }
+
                 sleep(getSpeed());
 
+                this.state = State.ARRIVED;
                 // clear old position
                 cd.clear(curPos, newPos);
                 cd.mark(newPos, col, no);
 
                 // free old position
+                this.state = State.FINISHED;
                 this.getSemaphoreFromPos(curPos).V();
                 curPos = newPos;
 
             } catch (InterruptedException e) {
                 // if old position not signaled, signal both new and old
-                this.repair(curPos != newPos);
+                this.repair();
             }
         }
     }
@@ -147,20 +168,70 @@ public class Car extends Thread {
       Utility method used by class it self
     */
 
-    private void repair(boolean clearNewPos) {
-        // signal current position
-        this.getSemaphoreFromPos(curPos).V();
-        cd.clear(curPos);
+    private void repair() {
+        switch (this.state) {
+            case INIT:
+                cd.clear(curPos);
+                this.getSemaphoreFromPos(curPos).V();
 
-        // signal new position
-        if (clearNewPos) {
-            this.getSemaphoreFromPos(newPos).V();
-            cd.clear(newPos);
+                if (inAlley() || atAlleyExit())
+                    this.alley.leave(this.no);
+
+                break;
+
+            case WAITING_FOR_SPECIAL:
+                cd.clear(curPos);
+                this.getSemaphoreFromPos(curPos).V();
+
+                if (inAlley())
+                    this.alley.leave(this.no);
+
+                break;
+
+            case WAITING_FOR_POS:
+                cd.clear(curPos);
+                this.getSemaphoreFromPos(curPos).V();
+
+                if (inAlley() || atAlleyEnterance())
+                    this.alley.leave(this.no);
+
+                break;
+
+            case MOVING:
+                cd.clear(curPos, newPos);
+                this.getSemaphoreFromPos(curPos).V();
+                this.getSemaphoreFromPos(newPos).V();
+
+                if (inAlley() || atAlleyEnterance())
+                    this.alley.leave(this.no);
+
+                break;
+
+            case ARRIVED:
+                cd.clear(newPos);
+                this.getSemaphoreFromPos(newPos).V();
+                this.getSemaphoreFromPos(curPos).V();
+
+                if (inAlley() || atAlleyEnterance())
+                    this.alley.leave(this.no);
+
+                break;
+
+            case FINISHED:
+                cd.clear(newPos);
+                this.getSemaphoreFromPos(newPos).V();
+
+                if (inAlley() || atAlleyEnterance())
+                    this.alley.leave(this.no);
+
+                break;
+
+            default:
+                break;
         }
 
         // leave alley
-        if (inAlley())
-            this.alley.leave(this.no);
+        //if (inAlley()) this.alley.leave(this.no);
 
         // stop thread
         try {
