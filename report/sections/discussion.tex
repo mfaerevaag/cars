@@ -3,30 +3,50 @@
 %%% TeX-master: "../report"
 %%% End:
 
-In this section we will discuss our implementations of the different features.
+In this section we will discuss our implementations of the different
+features.
 
 \subsection{Starvation in the alley}
-There is a potential for starvation if the children going in one direction decide to bully the others and always keep at least a single car in the alley, until the others have return to the alley entrance.
+There is a potential for starvation if the children going in one
+direction decide to bully the others and always keep at least a single
+car in the alley, while the others have return to the alley entrance.
 
-This is very close to what the slowdown actually does, as cars outside the alley drive fast to get into the alley again. Thus, the cars waiting to enter have to wait longer.
+This is similar to what the slowdown does, as cars outside the alley
+drive fast to get into the alley again. Thus, the cars waiting to
+enter have to wait longer.
 
-Fortunately, and due to the variation of the speeds of the cars, there is not starvation, as the cars will at some point get lucky and progress. There is, however, a lot of unnecessary waiting.
+Fortunately, and due to the variation of the speeds of the cars, there
+is not starvation, as the cars will at some point get lucky and
+progress. There is, however, a lot of unnecessary waiting.
 
 \subsection{Semaphores versus Monitors}
 \label{sub:disc-sema-moni}
-Using semaphores allows for finely tuned synchronization, but sometimes at the cost of additional complexity compared to implementing the same functionality using monitors.
+Using semaphores allows for finely tuned synchronization, but
+sometimes at the cost of additional complexity compared to
+implementing the same functionality using monitors.
 
-As aspiring software engineers we highly value code that is easy to comprehend and maintain, so we would prefer to sacrifice some overhead to achieve a better code base.
+As aspiring software engineers we highly value code that is easy to
+comprehend and maintain, so we would prefer to sacrifice some overhead
+to achieve a better code base.
 
 \subsubsection{Field}
 \label{subsub:disc-field}
-For our implementation of the field, we believe that using semaphores is preferable. This is due to the simplicity of calling \code{P()} to request a new position on the map, and \code{V()} to free the previously held.
+For our implementation of the field, we believe that using semaphores
+is preferable. This is due to the simplicity of calling \code{P()} to
+request a new position on the map, and \code{V()} to free the
+previously held.
 
 \subsubsection{Alley}
 \label{subsub:disc-alley}
-Regarding the alley, we find the monitor-implementation easier to comprehend, and thus likely less error prone when being implemented. From a development perspective, this is definitely to be preferred.
-
+Regarding the alley, we find the monitor-implementation easier to
+comprehend, and thus likely less error prone when being
+implemented. From a development perspective, this is definitely to be
+preferred.
 
 \subsubsection{Barrier}
 \label{subsub:disc-barrier}
-Regarding the barrier, we find the two basic (i.e. no variable threshold) implementations equally complex. When we chose to implement the variable threshold, we did it using the monitor as it seemed simpler, as we could avoid calling \code{P()} and \code{V()} on the three semaphores several times just to get proper synchronization.
+Regarding the barrier, we find the two basic (i.e. no variable
+threshold) implementations equally complex. When we chose to implement
+the variable threshold, we did it using the monitor as it seemed
+simpler, as we could avoid calling \code{P()} and \code{V()} on the
+three semaphores several times just to get proper synchronization.

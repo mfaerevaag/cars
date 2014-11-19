@@ -3,13 +3,13 @@
 %%% TeX-master: "../report"
 %%% End:
 
-The field is implementation of the actual ``board'', where the cars move
-around. To avoid cars colliding together when trying to move to the
-same spot on the board, we use semaphores. In principle, a car waits
-for the next spot it plans to move to. Only first when the car gets
-it, it signals its previous spot's semaphore. This way we can be
-certain that there is no race-conditions or alike when trying to move
-from one spot to another.
+The field is implementation of the actual ``board'', where the cars
+move around. To avoid cars colliding together when trying to move to
+the same spot on the board, we use semaphores. In principle, a car
+waits for the next spot it plans to move to. Only first when the car
+gets it, does it signal its previous spot's semaphore. This way we can
+be certain that there is no race-conditions or alike when trying to
+move from one spot to another.
 
 
 \subsection{Implementation}
@@ -22,9 +22,10 @@ makes it impossible for the cars to collide.
 
 Although a simple solution, it is not very efficient. One can imagine
 a solution where there are only as many semaphores in total, as there
-are cars. This, though, causes challenges when deciding on the
-correct semaphore to wait on. We have chosen not to
-prioritize this in our solution of the assignment, but instead to focus on the correctness of our implementations.
+are cars. This, though, causes challenges when deciding on the correct
+semaphore to wait on. We have chosen not to prioritize this in our
+solution of the assignment, but instead to focus on the correctness of
+our implementations.
 
 
 \subsection{Testing}

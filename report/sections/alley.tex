@@ -105,36 +105,43 @@ public synchronized void enter(int no) throws InterruptedException {
 \label{lst:all-mon}
 \end{figure}
 
-When a car is leaving we follow the same pattern of steps, only
-in the opposite order. The car starts with decrementing the
-\code{count} variable and then notifies the waiting car(s) by calling either \code{notify()} or \code{notifyAll()}.
+When a car is leaving we follow the same pattern of steps, only in the
+opposite order. The car starts with decrementing the \code{count}
+variable and then notifies the waiting car(s) by calling either
+\code{notify()} or \code{notifyAll()}.
 
-\code{notify()} is used when the last of the upwards bound cars leave, as there is only a single line of downwards bound cars waiting, whereas there are two lines of cars waiting to go upwards and therefore \code{notifyAll()} is called when the last car headed downwards leaves.
+\code{notify()} is used when the last of the upwards bound cars leave,
+as there is only a single line of downwards bound cars waiting,
+whereas there are two lines of cars waiting to go upwards and
+therefore \code{notifyAll()} is called when the last car headed
+downwards leaves.
 
-
-%We actually use \code{notifyAll}, and not \code{notify}, to make sure
-%we notify the correct car (as there is at most one car waiting). This
-%could be optimized, but we prioritize correctness over
-%performance. Also, Java ``suffers'' from spurious wake ups of waiting
-%threads, so one could question whether the use of \code{notify}
-%instead of \code{notifyAll} would have a significant effect.
 
 \subsection{Liveness and safety properties}
 \label{sub:all-proof}
 \subsubsection{Safety}
-We want to avoid cars going in both directions to simultaneously enter the alley, as this will cause a deadlock. Thus we can state an invariant which must always hold:
+We want to avoid cars going in both directions to simultaneously enter
+the alley, as this will cause a deadlock. Thus we can state an
+invariant which must always hold:
 
+\emph{Whenever one or more cars heading in one direction are inside
+  the alley, cars driving the opposite direction may not enter}
 
-\emph{Whenever one or more cars heading in one direction are inside the alley, cars driving the opposite direction may not enter}
+We can use model-checking in Spin to verify that our program actually
+adhere to this invariant.
 
+Our model contains the cars (\code{proctypes}), semaphores, the
+functions \code{enter()} and \code{leave()}, as well as variables used
+to check that the invariant is adhered to.
 
-We can use model-checking in Spin to verify that our program actually adhere to this invariant.
+The model works by having four cars driving upwards, and four driving
+downwards. When a car (a process) has entered the alley, all it does
+is check that the invariant holds, then leaves, and repeats. As Spin
+checks all interleavings, this means that even though it seems that a
+car instantly leaves the alley, Spin also check the cases where other
+cars call \code{enter()} while this car is still inside the alley.
 
-Our model contains the cars (\code{proctypes}), semaphores, the functions \code{enter()} and \code{leave()}, as well as variables used to check that the invariant is adhered to.
-
-The model works by having 4 cars driving upwards, and 4 driving downwards. When a car (a process) has entered the alley, all it does is check that the invariant holds, then leaves, and repeats. As Spin checks all interleavings, this mean that even though it seems that a car instantly leaves the alley, Spin also check the cases where other cars call \code{enter()} while this car is still inside the alley.
-
-The downwards headed cars are implemented as follows:
+The downwards heading cars are implemented as follows:
 \begin{promela}
 active [ndown] proctype car_down(){
 	do::
@@ -148,9 +155,15 @@ active [ndown] proctype car_down(){
 
 The upwards driving cars are implemented symmetrical to this.
 
-As the Java-implementations of the functions \code{enter()} and \code{leave()} are split into two cases, up/down, we have done the same for our Spin-implementation. Our Spin-implementation of these functions are identical to the ones in Java, except we have added a single statement keeping track of how many cars have entered the alley, and the direction they are headed.
+As the Java-implementations of the functions \code{enter()} and
+\code{leave()} are split into two cases, up/down, we have done the
+same for our Spin-implementation. Our Spin-implementation of these
+functions are identical to the ones in Java, except we have added a
+single statement keeping track of how many cars have entered the
+alley, and the direction they are headed.
 
-This is what is used in the car \code{proctype} to check that the invariant hold when a (downwards headed) car is inside the alley:
+This is what is used in the car \code{proctype} to check that the
+invariant hold when a (downwards headed) car is inside the alley:
 \begin{promela}
 assert(proof_up_in_alley == 0 && proof_down_in_alley > 0);
 \end{promela}
@@ -160,11 +173,12 @@ And in the other direction:
 assert(proof_down_in_alley == 0 && proof_up_in_alley > 0);
 \end{promela}
 
+\emph{Even though the check is only performed when at least one car is
+  inside the alley, the invariant always hold, as it trivially holds
+  when there is no car inside the alley.}
 
-\emph{Even though the check is only performed when at least one car is inside the alley, the invariant always hold, as it trivially holds when there is no car inside the alley.}
-
-When we run the Spin-verification, no assertions are violated. Furthermore we get the following information:
-
+When we run the Spin-verification, no assertions are
+violated. Furthermore we get the following information:
 \begin{itemize}
 	\item State-vector 52 byte, depth reached 4812, errors: 0
 	\item 39185 states, stored
@@ -172,17 +186,26 @@ When we run the Spin-verification, no assertions are violated. Furthermore we ge
 	\item 107220 transitions (= stored+matched)
 \end{itemize}
 
-Even though each car loop its instructions, Spin recognizes states it has previously been in, and thus do not run forever despite the fact that the loop is not intended to ever terminate. This is likely the reason why there are so many matched states, as each state can possibly be reached from different sequences of execution.
+Even though each car loop its instructions, Spin recognizes states it
+has previously been in, and thus do not run forever despite the fact
+that the loop is not intended to ever terminate. This is likely the
+reason why there are so many matched states, as each state can
+possibly be reached from different sequences of execution.
 
 \subsubsection{Liveness}
-We cannot really prove this, but as a few rounds of execution will reveal that cars in queue to enter the alley will eventually do so. This is also helped by the fact that the speed of the cars vary with each round, such that the cars with access to the alley will most likely not continue to keep the access forever. Thus, the queued cars will not starve.
+We cannot really prove this, but as a few rounds of execution will
+reveal that cars queuing to enter the alley will eventually do
+so. This is also supported by the fact that the speed of the cars vary
+with each round, such that the cars with access to the alley will most
+likely not continue to keep the access forever. Thus, the queued cars
+will not starve.
 
 
 \subsection{Testing}
 \label{sub:all-test}
 As our proof in Promela only verifies that no cars driving the
 opposite direction of those already in the alley can enter, they might
-still attempt.
+still attempt to do so.
 
-This can visually be tested by running any test, as they all drive through
-the alley, or simply by starting all the cars.
+This can visually be tested by running any test, as they all drive
+through the alley, or simply by starting all the cars.
