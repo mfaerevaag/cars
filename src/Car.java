@@ -169,6 +169,7 @@ public class Car extends Thread {
     */
 
     private void repair() {
+        // clean up depending on car's state
         switch (this.state) {
             case INIT:
                 cd.clear(curPos);
@@ -229,9 +230,6 @@ public class Car extends Thread {
             default:
                 break;
         }
-
-        // leave alley
-        //if (inAlley()) this.alley.leave(this.no);
 
         // stop thread
         try {
