@@ -21,7 +21,7 @@ Designs that avoid race conditions take proper care of the access to shared data
 This report is about our implementation of a virtual playground with 9 cars, implemented as individual threads, and how we deal with various concurrent problems. We assume that the reader has read the description on the website of the course \cite{assignment}, and will not go further into details regarding the problem in this section.
 
 
-For the mandatory extra task, we have chosen to implemented ``EXTRA (E)'', which is the implementation of the barrier with a variable threshold using a monitor. This is discussed in the section \ref{sec-bar}.
+For the mandatory extra task, we have chosen to implemented ``EXTRA (E)'', which is the implementation of the barrier with a variable threshold using a monitor. This is discussed in the section \ref{sub:bar-thres}.
 
 Throughout the implementation we have prioritized correctness over efficiency. This is for instance relevant in our implementation of the field of the playground (Section \ref{sec:field}).
 
