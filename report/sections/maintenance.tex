@@ -3,8 +3,7 @@
 %%% TeX-master: "../report"
 %%% End:
 
-Now we will look at the exercise of car maintenance. When
-shift-clicking a car's gate it should be removed from the field for
+Now we will look at Step 5 of the assignment, i.e. car maintenance. When shift-clicking a car's gate it should be removed from the field for
 maintenance. When control-clicking the gate again, it should be
 added at the gate and started. Solving this includes the challenges of
 stopping a thread (car) in a good manner and making sure that it
@@ -61,7 +60,7 @@ public void run() {
             }
 
         } catch (InterruptedException e) {
-            // do not signal new position, as it hasn't yet been required
+            // do not signal new position, as it hasn't yet been acquired
             this.repair(false);
         }
 
@@ -98,17 +97,15 @@ semaphore. Notice the parameter \code{clearNewPos}, setting whether to
 also signal the new position. In the second try-catch clause, it is
 called with \code{repair(curPos != newPos)}. Therefore, it will only
 signal the new position if it has not already been done. In the first
-try-catch, we know the new position's semaphore has not been required,
+try-catch, we know the new position's semaphore has not been acquired,
 so we just pass \code{false} as the argument. After signaling the
 relevant semaphores, we need to check if the car is currently in the
-alley. In that case, we have call \code{alley.leave(this.no)}
-manually, to ensure we do not mess up the counters. If we do not do
+alley. In that case, we have to call \code{alley.leave(this.no)}, to ensure we do not mess up the counters. If we do not do
 this, the alley will have registered the car entering, but not
-leave. This will cause it to think there is always one car in it, so
+leaving. This will cause it to think there is always one car in it, so
 the opposite direction will be blocked forever. We check if the car is
 in the alley with the utility method \code{inAlley()}, which can be
-count in the \code{Car} class. Lastly, we stop the thread with
-\code{join()} method.
+count in the \code{Car} class. Lastly, we stop the thread by calling \code{join()}.
 
 \begin{figure}[H]
 \label{lst:main-rep}

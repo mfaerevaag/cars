@@ -146,7 +146,7 @@ active [ndown] proctype car_down(){
 }
 \end{promela}
 
-The upwards going is implemented symmetrical to this.
+The upwards driving cars are implemented symmetrical to this.
 
 As the Java-implementations of the functions \code{enter()} and \code{leave()} are split into two cases, up/down, we have done the same for our Spin-implementation. Our Spin-implementation of these functions are identical to the ones in Java, except we have added a single statement keeping track of how many cars have entered the alley, and the direction they are headed.
 
@@ -159,6 +159,8 @@ assert(proof_up_in_alley == 0 && proof_down_in_alley > 0);
 
 Even though the check is only done when at least one car is inside the alley, the invariant always hold, as it trivially holds when there is no car inside the alley.
 
+
+TODO - model results
 
 \subsubsection{Liveness}
 We cannot really prove this, but as a few rounds of execution will reveal that cars in queue to enter the alley will eventually do so. This is also helped by the fact that the speed of the cars vary with each round, such that the cars with access to the alley will most likely not continue to keep the access forever. Thus, the queued cars will not starve.
