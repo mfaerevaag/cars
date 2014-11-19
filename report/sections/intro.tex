@@ -4,38 +4,69 @@
 %%% End:
 
 \subsection{Concurrency in general}
-Concurrent programming is opposes traditional sequential programming, as in sequential programming a computation must be run until termination, whereas in concurrent programming several computations may be executed interleaving each other. This paradigm has some strong advantages:
-\begin{itemize}
-	\item High responsiveness - as some input becomes available it can be processed immediately by temporarily blocking another thread running on the processor.
-	\item As we have moved from single core systems, to systems with multiple processing units, higher throughput can be achieved if the computations are implemented concurrently and run in parallel.
-\end{itemize}
+Concurrent programming, opposed to traditional sequential programming
+where a computation must be run until termination, concurrent
+programming supports execution of several computations interleaving
+each other. This paradigm has some strong advantages:
+\begin{description}
+\item[High responsiveness] \ \\
+  As some input becomes available, it can be processed immediately by
+  temporarily blocking another thread running on the processor.
+\item[Throughput] \ \\
+  As we have moved from single core systems, to systems with multiple
+  processing units, higher throughput can be achieved if the
+  computations are implemented concurrently and run in parallel.
+\end{description}
 
-Concurrency is omnipresent within information technology as many systems rely heavily on it. Examples hereof include  internet servers, (scientific) high performance clusters, and distributed services.
+Concurrency is omnipresent within information technology as many
+systems rely heavily on it. Examples hereof include internet servers,
+(scientific) high performance clusters, and distributed services.
 
-But concurrency also include some risks, and one should be careful when sharing data between threads. Designing concurrent programs carelessly can, and likely will, introduce race conditions which can be harmful and very hard to deal with as they might only occur under rare circumstances due to a particular sequence of execution. Thus, debugging can be very hard, as the errors can be close to impossible to reproduce.
+Concurrency also include some risks, and one should be careful
+when sharing data between threads. Designing concurrent programs
+carelessly can, and likely will, introduce race conditions which can
+be harmful and very hard to deal with as they might only occur under
+rare circumstances due to a particular sequence of execution. Thus,
+debugging can be very hard, as the errors can be close to impossible
+to reproduce.
 
-Designs that avoid race conditions take proper care of the access to shared data. In this assignment we use semaphores and monitors to achieve mutual exclusion in sections of the code where shared variables are read or written to.
+Designs that avoid race conditions take proper care of the access to
+shared data. In this assignment we use semaphores and monitors to
+achieve mutual exclusion in sections of the code where shared
+variables are read or written to.
 
 
 \subsection{The problem}
-This report is about our implementation of a virtual playground with 9 cars, implemented as individual threads, and how we deal with various concurrent problems. We assume that the reader has read the description on the website of the course \cite{assignment}, and will not go further into details regarding the problem in this section.
+This report is about our implementation of a virtual playground with
+nine cars, implemented as individual threads, and how we deal with
+various concurrent problems. We assume that the reader has read the
+description on the course website~\cite{assignment}, and we will
+therefore not go further into details regarding the problem in this
+section.
 
+For the mandatory extra task, we have chosen to implemented ``EXTRA
+(E)'', which is the implementation of the barrier with a variable
+threshold using a monitor. This is discussed in the section
+\ref{sub:bar-thres}.
 
-For the mandatory extra task, we have chosen to implemented ``EXTRA (E)'', which is the implementation of the barrier with a variable threshold using a monitor. This is discussed in the section \ref{sub:bar-thres}.
-
-Throughout the implementation we have prioritized correctness over efficiency. This is for instance relevant in our implementation of the field of the playground (Section \ref{sec:field}).
-
+Throughout the implementation we have prioritized correctness over
+efficiency. This is for instance relevant in our implementation of the
+field of the playground (Section~\ref{sec:field}).
 
 
 \subsection{Structure of the report}
-The body of the report is structured such that each section corresponds to a part of the playground - i.e. the field, the alley, and the barrier with and without a variable threshold. Each of these sections contain a subsection describing the design and implementation, tests and, in a single case, a formal proof.
+The body of the report is structured such that each section
+corresponds to a part of the playground - i.e. the field, the alley,
+and the barrier with and without a variable threshold. Each of these
+sections contain a subsection describing the design and
+implementation, tests and, in a single case, a formal proof.
 
 
-
-\subsection{Comment on the major versions of the program}
+\subsection{Comment on major versions of the program}
 \label{sub:versions}
-We have made two major versions of the program. \emph{The first version} implements the steps 1 and 3, whereas \emph{the second version} also includes steps 4, 5, and ``Extra (E)''.
+We have made two major versions of the program. \emph{The first
+  version} implements the steps 1 and 3, whereas \emph{the second
+  version} also includes steps 4, 5, and ``Extra (E)''.
 
-TODO: describe how this works? Or perhaps just on CampusNet in the comment field
-
-TODO: are tests only included in the second version?
+In the second version we have made the barrier and alley using
+monitors, which is also used when solving the extra assignment.
