@@ -3,15 +3,37 @@
 %%% TeX-master: "../report"
 %%% End:
 
-TODO!
+\subsection{Concurrency in general}
+Concurrent programming is opposes traditional sequential programming, as in sequential programming a computation must be run until termination, whereas in concurrent programming several computations may be executed interleaving each other. This paradigm has some strong advantages:
+\begin{itemize}
+	\item High responsiveness - as some input becomes available it can be processed immediately by temporarily blocking another thread running on the processor.
+	\item As we have moved from single core systems, to systems with multiple processing units, higher throughput can be achieved if the computations are implemented concurrently and run in parallel.
+\end{itemize}
 
-We have chosen to implemented the extra task ''EXTRA (E)``, and this is discussed in the section ? TODO!
+Concurrency is omnipresent within information technology as many systems rely heavily on it. Examples hereof include  internet servers, (scientific) high performance clusters, and distributed services.
 
-The body of the report is structured such that each section corresponds to a part of the playground - i.e. the field, the alley, and the barrier with and without a variable threshold. Each of these sections contain a subsection describing tests and, in a single case, a formal proof.
+But concurrency also include some risks, and one should be careful when sharing data between threads. Designing concurrent programs carelessly can, and likely will, introduce race conditions which can be harmful and very hard to deal with as they might only occur under rare circumstances due to a particular sequence of execution. Thus, debugging can be very hard, as the errors can be close to impossible to reproduce.
 
-\subsection{TODO - the report and where what which where THE WHO? is discussed}
-We have structured the report such that discussion takes place in the section (\ref{sec:discussion}) (Discussion). This includes whether the ''Slowdown`` in the alley causes starvation, semaphores versus monitors, TODO!
+Designs that avoid race conditions take proper care of the access to shared data. In this assignment we use semaphores and monitors to achieve mutual exclusion in sections of the code where shared variables are read or written to.
+
+
+\subsection{The problem}
+
+This report is about our implementation of a virtual playground with 9 go-karts, implemented as individual threads, and how we deal with various concurrent problems.
+
+TODO: correctness over efficiency.
+
+
+TODO: the setting? Or assume the reader has read the description of the assignment TODO
+
+For the mandatory extra task, we have chosen to implemented ``EXTRA (E)'', which is the implementation of the barrier with a variable threshold using a monitor. This is discussed in the section \ref{sec-bar}.
+
+\subsection{Structure of the report}
+The body of the report is structured such that each section corresponds to a part of the playground - i.e. the field, the alley, and the barrier with and without a variable threshold. Each of these sections contain a subsection describing the design and implementation, tests and, in a single case, a formal proof.
+
 
 \subsection{Comment on semaphore versus monitor versions}
 \label{sub:sema-vs-moni}
+TODO: move this to Alley and Barrier? TODO
+
 For Step 4 of the assignment, we have made a class for each of the implementations of the alley and barrier, yielding the classes \code{Alley}, \code{AlleyMonitor}, \code{Barrier}, and \code{BarrierMonitor}
