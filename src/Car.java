@@ -114,6 +114,7 @@ public class Car extends Thread {
                 newPos = nextPos();
 
                 this.state = State.WAITING_FOR_SPECIAL;
+
                 // check if at any significant position
                 // cannot be at more than one at the same time
                 if (atGate()) {
@@ -128,32 +129,27 @@ public class Car extends Thread {
                 }
 
                 this.state = State.WAITING_FOR_POS;
+
                 // wait for new position
                 this.getSemaphoreFromPos(newPos).P();
 
                 this.state = State.MOVING;
+
                 // move to new position
                 cd.clear(curPos);
                 cd.mark(curPos, newPos, col, no);
 
-//                // test
-//                if (inAlley()) {
-//                    cd.mark(curPos, Color.YELLOW, no);
-//                } else if (atAlleyEnterance()) {
-//                    cd.mark(curPos, Color.GREEN, no);
-//                } else if (atAlleyExit()) {
-//                    cd.mark(curPos, Color.RED, no);
-//                }
-
                 sleep(getSpeed());
 
                 this.state = State.ARRIVED;
+
                 // clear old position
                 cd.clear(curPos, newPos);
                 cd.mark(newPos, col, no);
 
-                // free old position
                 this.state = State.FINISHED;
+
+                // free old position
                 this.getSemaphoreFromPos(curPos).V();
                 curPos = newPos;
 
