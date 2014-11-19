@@ -18,22 +18,24 @@ Designs that avoid race conditions take proper care of the access to shared data
 
 
 \subsection{The problem}
+This report is about our implementation of a virtual playground with 9 cars, implemented as individual threads, and how we deal with various concurrent problems. We assume that the reader has read the description on the website of the course \cite{assignment}, and will not go further into details regarding the problem in this section.
 
-This report is about our implementation of a virtual playground with 9 go-karts, implemented as individual threads, and how we deal with various concurrent problems.
-
-TODO: correctness over efficiency.
-
-
-TODO: the setting? Or assume the reader has read the description of the assignment TODO
 
 For the mandatory extra task, we have chosen to implemented ``EXTRA (E)'', which is the implementation of the barrier with a variable threshold using a monitor. This is discussed in the section \ref{sec-bar}.
+
+Throughout the implementation we have prioritized correctness over efficiency. This is for instance relevant in our implementation of the field of the playground (Section \ref{sec:field}).
+
+
 
 \subsection{Structure of the report}
 The body of the report is structured such that each section corresponds to a part of the playground - i.e. the field, the alley, and the barrier with and without a variable threshold. Each of these sections contain a subsection describing the design and implementation, tests and, in a single case, a formal proof.
 
 
-\subsection{Comment on semaphore versus monitor versions}
-\label{sub:sema-vs-moni}
-TODO: move this to Alley and Barrier? TODO
 
-For Step 4 of the assignment, we have made a class for each of the implementations of the alley and barrier, yielding the classes \code{Alley}, \code{AlleyMonitor}, \code{Barrier}, and \code{BarrierMonitor}
+\subsection{Comment on the major versions of the program}
+\label{sub:versions}
+We have made two major versions of the program. \emph{The first version} implements the steps 1 and 3, whereas \emph{the second version} also includes steps 4, 5, and ``Extra (E)''.
+
+TODO: describe how this works? Or perhaps just on CampusNet in the comment field
+
+TODO: are tests only included in the second version?
